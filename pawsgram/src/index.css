@@ -9,9 +9,13 @@ footer {
 }
 
 .container {
-  padding: 30px;
+  padding-top: 80px;
+  padding-left: 30px;
+  padding-right: 30px;
+  padding-bottom: 30px;
   background-color: white;
   min-width: 80%;
+  margin-bottom: 0;
 }
 
 .color-primary {
@@ -47,4 +51,43 @@ footer {
   position: fixed;
   bottom: 5em;
   left: 5em;
+}
+
+.postList {
+  list-style: none;
+}
+
+.postContent:after {
+  /*modified from https://www.w3schools.com/howto/howto_css_timeline.asp*/
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  left: -22px;
+  background-color: white;
+  border: 5px solid lightcoral;
+  top: 15px;
+  border-radius: 50%;
+  z-index: 1;
+}
+.postContent {
+  padding: 20px 40px;
+  margin-top: 30px;
+  min-width: 50%;
+  max-width: 65%;
+}
+
+.postTimeline {
+  padding: 50px;
+  text-align: right;
+  border-right: 15px solid lightcoral;
+}
+.likes {
+  color: deeppink;
+}
+
+.tagName {
+  background-color: lightcoral;
+  color: white;
+  padding: 5px;
 }

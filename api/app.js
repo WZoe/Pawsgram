@@ -6,6 +6,7 @@ var cookieParser = require('cookie-parser');
 var session = require('express-session')
 var logger = require('morgan');
 
+var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var eventsRouter = require('./routes/events');
 var categoryRouter = require('./routes/category');
@@ -23,6 +24,7 @@ app.use(cookieParser());
 app.use(session({ secret: "keyboard cat" }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/events', eventsRouter);
 app.use('/category', categoryRouter);

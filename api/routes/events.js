@@ -9,14 +9,218 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 // citation ends
 
-router.post('/', function(req, res, next) {
-  res.send({
-    id: 1,
-    user_id: 1,
-    req: req.body,
-    username: req.body.username,
-    pet_name: req.body.pet_name,
-    avatar: req.body.avatar});
+// mongodb
+// cite from: https://expressjs.com/en/guide/database-integration.html#mongodb
+let MongoClient = require('mongodb').MongoClient;
+let ObjectID = require('mongodb').ObjectID;
+
+// special fields for categories
+let categories = {
+    "General": {},
+    "Activity":{},
+    "Memorial":{},
+    "Weight Tracking":{"weight":"float"},
+    "Vaccination":{"vac_name":"string"},
+    "Vet Visit":{"reason":"string","medication":"string"}
+};
+
+// create event
+router.post('/create', function(req, res, next) {
+    let new_user = {
+        user_id: req.session.user_id,
+        title: req.body.title,
+        category: req.body.category,
+        date: req.body.date,
+        description: req.body.description,
+        likes: parseInt(req.body.likes),
+        private: JSON.parse(req.body.private),
+        photo: req.body.photo,
+        location: req.body.location
+    };
+    // add special fields
+    for(let field in categories[req.body.category]){
+        if(categories[req.body.category][field] == "float"){
+            new_user[field] = parseFloat(req.body[field]);
+        }
+        else if(categories[req.body.category][field] == "int"){
+            new_user[field] = parseInt(req.body[field]);
+        }
+        else if(categories[req.body.category][field] == "bool"){
+            new_user[field] = JSON.parse(req.body[field]);
+        }
+        else{
+            new_user[field] = req.body[field];
+        }
+    }
+  // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
+  MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
+    if(connectionErr){
+      res.send({success: false, msg: "DB connection failed."});
+      throw connectionErr;
+    }
+    let db = client.db('Pawsgram');
+    db.collection('events').insertOne(
+        new_user,
+        function(operationErr, event){
+          if(operationErr){
+            res.send({success: false, msg: "DB insertion failed."});
+            throw operationErr;
+          }
+          res.send({success: true, msg: "Successfully created event."});
+          client.close();
+        });
+  });
 });
+
+// timeline: show all events for an user (others only show public events, mine show public+private events)
+router.post('/timeline', function(req, res, next) {
+    let user_id;
+    if(req.body.user_id){
+        user_id = req.body.user_id;
+    }
+    else{
+        user_id = req.session.user_id;
+    }
+    // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
+    MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
+        if(connectionErr){
+            res.send({success: false, msg: "DB connection failed."});
+            throw connectionErr;
+        }
+        let db = client.db('Pawsgram');
+        db.collection('events').find({user_id: user_id})
+            .sort({date: -1})
+            .toArray(
+                function(operationErr, events){
+                    if(operationErr){
+                        res.send({success: false, msg: "DB find failed."});
+                        throw operationErr;
+                    }
+                    // filter out private events for non-self users
+                    if(user_id != req.session.user_id){
+                        events = events.filter(event => event.private == false);
+                    }
+                    // get today's date
+                    let today = new Date();
+                    let todayStr = today.getFullYear()+'/'+(today.getMonth()+1)+'/'+today.getDate();
+                    // detect if future events
+                    for(let event_id=0; event_id<events.length;event_id++){
+                        if(events[event_id].date > todayStr){
+                            events[event_id].future = true;
+                        }
+                        else{
+                            events[event_id].future = false;
+                        }
+                    }
+                    // get insert id for today event
+                    let insert_id = binarySearch(events, todayStr);
+                    events.splice(insert_id, 0, {category:"Today", date:todayStr});
+                    db.collection('users').findOne({_id: new ObjectID(user_id)}, function(operationErr2, user){
+                        if(operationErr2){
+                            res.send({success: false, msg: "DB find failed."});
+                            throw operationErr2;
+                        }
+                        res.send({data: events, user: user, success: true, msg: "Successfully load timeline for user."});
+                    });
+                    client.close();
+            });
+    });
+});
+
+// for you page: show the latest public event for everyone
+router.post('/forYou', function(req, res, next) {
+    // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
+    MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
+        if(connectionErr){
+            res.send({success: false, msg: "DB connection failed."});
+            throw connectionErr;
+        }
+        let db = client.db('Pawsgram');
+        let data = [];
+        db.collection('users').find({user_id: {$ne: req.session.user_id}})
+            .toArray(
+                function(operationErr, users){
+                    if(operationErr){
+                        res.send({success: false, msg: "DB find failed."});
+                        throw operationErr;
+                    }
+                    for(let i=0; i<users.length; i++){
+                        let user = users[i];
+                        data.push({"user":user});
+                        db.collection('events').find({user_id: user._id.toString()}) // user._id is ObjectID object, need to convert to string
+                            .sort({date: -1})
+                            .toArray(function(operationErr2, events){
+                                if(operationErr2){
+                                    res.send({success: false, msg: "DB find failed."});
+                                    throw operationErr2;
+                                }
+                                // filter out private events for non-self users
+                                if(user._id.toString() != req.session.user_id) {
+                                    events = events.filter(event => event.private == false);
+                                }
+                                // get today's date
+                                let today = new Date();
+                                let todayStr = today.getFullYear()+'/'+(today.getMonth()+1)+'/'+today.getDate();
+                                // get the latest event before tomorrow
+                                let latest_id = binarySearch(events, todayStr);
+                                // exclude all future events / no events
+                                if(latest_id < events.length){
+                                    data[i].event = events[latest_id];
+                                }
+                                // after last query
+                                if(i == users.length-1){
+                                    // do not display users with no past events
+                                    data = data.filter(d => d.hasOwnProperty('event'));
+                                    // order data by event date
+                                    data.sort(function(a,b){return b.event.date - a.event.date});
+                                    res.send({data: data, success: true, msg: "Successfully load for you page."});
+                                }
+                            });
+                    }
+                    client.close();
+                });
+    });
+});
+
+// like event
+router.post('/like', function(req, res, next) {
+    // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
+    MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
+        if(connectionErr){
+            res.send({success: false, msg: "DB connection failed."});
+            throw connectionErr;
+        }
+        let db = client.db('Pawsgram');
+        db.collection('events').update(
+            {_id: new ObjectID(req.body.event_id)},
+            {$inc: {likes: 1}},
+            function(operationErr, event){
+                if(operationErr){
+                    res.send({success: false, msg: "DB find failed."});
+                    throw operationErr;
+                }
+                res.send({success: true, msg: "Successfully liked event "+req.body.event_id});
+                client.close();
+            });
+    });
+});
+
+function binarySearch(array, today){
+    let l = 0, h = array.length-1;
+    let mid;
+    let res = -1;
+    while(h < array.length && l < h){
+        mid = parseInt((l+h+1)/2);
+        if(array[mid].date > today){
+            res = mid;
+            l = mid+1;
+        }
+        else{
+            h = mid-1;
+        }
+    }
+    res = res == -1 ? 0 : res+1;
+    return res;
+}
 
 module.exports = router;

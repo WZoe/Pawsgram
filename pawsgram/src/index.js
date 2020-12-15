@@ -12,14 +12,33 @@ class App extends React.Component {
     state={
         currentUser:{
             logged_in:false,
-            user_id:1,
-            username: "Zoe",
-            pet_name: "Graylind",
-            avatar: "photo1.png"
+            // user_id:1,
+            // username: "Zoe",
+            // pet_name: "Graylind",
+            // avatar: "photo1.png"
         },
-        page: "Timeline",
-        timelineOwner: {
-            user_id: 1,
+        page: "Discover",
+        error: {
+            hasError: false,
+            msg: ''
+        }
+    }
+
+    updateError = (result) =>{
+        if (!result.success) {
+            this.setState({
+                error:{
+                    hasError: true,
+                    msg: result.msg
+                }
+            })
+        } else {
+            this.setState({
+                error:{
+                    hasError: false,
+                    msg: ''
+                }
+            })
         }
     }
 
@@ -41,19 +60,19 @@ class App extends React.Component {
         const url = endpoint+api
 
         fetch(url, {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
         })
             .then((result) => result.json())
             .then((result) => {
-                if (result.success) {
-                    // success
-                    this.setState({
-                        currentUser:result,
-                    })
-                } else {
-                    //failed, return {success:false, msg:}
-                    return result
-                }
+                console.log(result)
+                this.setState({
+                    currentUser:result,
+                })
+                return result
             })
     }
 
@@ -71,7 +90,11 @@ class App extends React.Component {
         const url = endpoint+api
 
         fetch(url, {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
         })
             .then((result) => result.json())
             .then((result) => {
@@ -96,6 +119,10 @@ class App extends React.Component {
 
         fetch(url, {
             method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
             body:JSON.stringify({
                 username : username,
                 password: password
@@ -103,13 +130,11 @@ class App extends React.Component {
         })
             .then((result) => result.json())
             .then((result) => {
+                this.updateError(result)
+                console.log(result)
                 if (result.success) {
                     //success, fetch current user
                     this.getCurrentUser()
-                    return result
-                } else {
-                    //failed, return {success:false, msg:}
-                    return result
                 }
             })
     }
@@ -121,6 +146,10 @@ class App extends React.Component {
 
         fetch(url, {
             method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
             body:JSON.stringify({
                 username : username,
                 password: password
@@ -128,6 +157,7 @@ class App extends React.Component {
         })
             .then((result) => result.json())
             .then((result) => {
+                this.updateError(result)
                 if (result.success) {
                     //success, update info and fetch current user
                     let result = this.userChangeInfo(info)
@@ -135,10 +165,6 @@ class App extends React.Component {
                         //success, fetch current user
                         this.getCurrentUser()
                     )
-                    return result
-                } else {
-                    //failed, return {success:false, msg:}
-                    return result
                 }
             })
     }
@@ -150,6 +176,10 @@ class App extends React.Component {
 
         fetch(url, {
             method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
             body:JSON.stringify(info)
         })
             .then((result) => result.json())
@@ -171,16 +201,15 @@ class App extends React.Component {
     }
 
     render() {
-        const {currentUser, page, timelineOwner} = this.state
+        const {currentUser, page, timelineOwner, error} = this.state
 
         return (
             <div>
-            <TimelinePage currentUser={currentUser} page={page} timelineOwner={timelineOwner}/>
+            <TimelinePage currentUser={currentUser} page={page} timelineOwner={timelineOwner} error={error}/>
             <Nav currentUser={currentUser} page={page}
-                 userLogOut={this.userLogOut} userLogIn={this.userLogIn} userSignUp={this.userSignUp}
-                setTimelineOwner={this.setTimelineOwner} switchToTimeline={this.switchToTimeline} switchToDiscover={this.switchToDiscover}/>
-            <LogIn/>
-            <SignUp/>
+                 userLogOut={this.userLogOut} setTimelineOwner={this.setTimelineOwner} switchToTimeline={this.switchToTimeline} switchToDiscover={this.switchToDiscover}/>
+            <LogIn userLogIn={this.userLogIn}/>
+            <SignUp userSignUp={this.userSignUp}/>
             <NewPost/>
             </div>
         )

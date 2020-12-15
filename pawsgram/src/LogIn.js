@@ -1,6 +1,19 @@
 import React, {Component} from 'react'
 
 class LogIn extends Component {
+    state = {
+        username:'',
+        password:'',
+    }
+// cited from https://www.taniarascia.com/getting-started-with-react/
+    handleChange = (event) => {
+        const {name, value} = event.target
+
+        this.setState({
+            [name]: value,
+        })
+    }
+
     render() {
         const {currentUser, page, timelineOwner} = this.props
 
@@ -10,28 +23,24 @@ class LogIn extends Component {
                 <div className="modal-dialog modal-dialog-centered" role="document">
                     <div className="modal-content">
                         <div className="modal-header">
-                            <h5 className="modal-title" id="exampleModalLongTitle">Create New Group</h5>
+                            <h5 className="modal-title" id="exampleModalLongTitle">Log In</h5>
                             <button type="button" className="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
-                        <div className="modal-body" id="newGroupModalBody">
+                        <div className="modal-body" id="logInBody">
                             {/*form group is modified from https://getbootstrap.com/docs/4.0/components/forms/-->*/}
                             <div className="form-group">
-                                <label htmlFor="groupname">Group Name </label>
-                                <input className="form-control" type="text" id="groupname" name="groupname"/>
+                                <label htmlFor="username">Username </label>
+                                <input className="form-control" type="text" id="username" name="username" value={this.state.username} onChange={this.handleChange}/>
                             </div>
                             <div className="form-group">
-                                <label htmlFor="members">Members</label>
-                                <input className="form-control" type="text" id="members" name="members"
-                                       placeholder="Alex Bob Cathy"/>
-                                <small id="membershelp" className="form-text text-muted">Please use whitespace to
-                                    separate the
-                                    additional usernames.</small>
+                                <label htmlFor="password">Password</label>
+                                <input className="form-control" type="password" id="password" name="password" value={this.state.password} onChange={this.handleChange}/>
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button type="button" className="btn btn-primary" id="newgroup">Create</button>
+                            <button type="button" className="btn btn-primary" id="logInSubmit" data-dismiss="modal" data-target="logIn" onClick={()=>{this.props.userLogIn(this.state.username, this.state.password)}}>log In</button>
                         </div>
                     </div>
                 </div>

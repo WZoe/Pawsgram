@@ -162,6 +162,18 @@ class TimelinePage extends Component {
             return (
                 <div className="container" id="top">
                     <NewButton currentUser={currentUser} page={page} timelineOwner={timelineOwner}/>
+
+                    {/*display error msg*/}
+                    {this.props.error.hasError &&
+                    // this is cited from https://getbootstrap.com/docs/4.0/components/alerts/#dismissing
+                    <div className="mt-1 alert alert-danger alert-dismissible fade show" role="alert">
+                        <h4 className="alert-heading">Oops!</h4>
+                        {this.props.error.msg}
+                        <button type="button" className="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>}
+
                     <ul className="postList">
                         {/*Pet info*/}
                         <div className="row">
@@ -188,6 +200,40 @@ class TimelinePage extends Component {
 
         // DISCOVER MODE ---------------------------------------------------------
         {
+            return (
+                <div className="container" id="top">
+                    <NewButton currentUser={currentUser} page={page} timelineOwner={timelineOwner}/>
+                    {/*display error msg*/}
+                    {this.props.error.hasError &&
+                    // this is cited from https://getbootstrap.com/docs/4.0/components/alerts/#dismissing
+                    <div className="mt-1 alert alert-danger alert-dismissible fade show" role="alert">
+                        <h4 className="alert-heading">Oops!</h4>
+                        {this.props.error.msg}
+                        <button type="button" className="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>}
+
+                    <ul className="postList">
+                        {/*Pet info*/}
+                        <div className="row">
+                            <div className="col-3 postTimeline">
+                                <img src={process.env.PUBLIC_URL + '/img/photo1.png'} width="200" height="200"
+                                     className="d-inline-block align-top rounded-circle" alt=""/>
+                            </div>
+                            <div className="col-9 postContent color-white">
+                                <h1 className="">Graylind</h1>
+                                <h5>Owner:  {user.username}</h5>
+                                <h5>Gender: {user.gender === "male"? <i className="fas fa-mars"></i>:
+                                    <i className="fas fa-venus"></i>}</h5>
+                                <h5>Breed:  {user.breed}</h5>
+                                <h5>Color:  {user.color}</h5>
+                                <h5>Birthday:   {user.birthday}</h5>
+                            </div>
+                        </div>
+                    </ul>
+                </div>
+            )
 
         }
     }

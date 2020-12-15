@@ -1,7 +1,7 @@
 $(document).ready(function (){
     // users
     $("#register").click(function (){
-        $.post("/users/signUp", { username: "Eimee", password: "eimee"},
+        $.post("/users/signUp", { username: "Test", password: "test"},
             function(data, status){
                 console.log(data, status);
             });
@@ -10,8 +10,6 @@ $(document).ready(function (){
     $("#changeUserInfo").click(function (){
         $.post("/users/changeInfo",
             {
-                username: "Eimee",
-                password: "eimee",
                 pet_name: "Brownie",
                 avatar: "photo2.png",
                 gender: "male",
@@ -24,9 +22,14 @@ $(document).ready(function (){
     });
 
     $("#login").click(function (){
-        $.post("/users/login", { username: "Eimee", password: "eimee"},
+        let username = $("#username").val();
+        let password = $("#password").val();
+        console.log("input username:",username,"\tinput password:",password);
+        $.post("/users/login", { username: username, password: password},
             function(data, status){
                 console.log(data, status);
+                console.log(data.success);
+                console.log(data.msg);
             });
     });
 
@@ -41,6 +44,7 @@ $(document).ready(function (){
         $.post("/users/getCurrentUser",
             function(data, status){
                 console.log(data, status);
+                console.log(data.logged_in);
             });
     });
 

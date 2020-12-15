@@ -44,6 +44,7 @@ router.post('/signUp', function(req, res, next) {
 
 // login
 router.post('/login', function(req, res, next) {
+  console.log("username:",req.body.username,"\tpassword:",req.body.password)
   // verify user login info
   // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
   MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
@@ -125,10 +126,7 @@ router.post('/changeInfo', function(req, res, next) {
     }
     let db = client.db('Pawsgram');
     db.collection('users').update(
-        {
-          username: req.body.username,
-          password: req.body.password
-        },
+        {_id: new ObjectID(req.session.user_id)},
         {$set: {
           pet_name: req.body.pet_name,
           avatar: req.body.avatar,
@@ -138,12 +136,41 @@ router.post('/changeInfo', function(req, res, next) {
           birthday: req.body.birthday
         }},
         function(operationErr, user){
+          console.log("user:",user)
           if(operationErr){
             res.send({success: false, msg: "DB update failed."});
             throw operationErr;
           }
-          res.send({success: true, msg: "Successfully changed info."});
-          client.close();
+          // automatically generate birthday memorial event
+          let birthday_event = {
+            user_id: req.session.user_id,
+            title: req.body.pet_name+"'s birthday",
+            category: "Memorial",
+            date: req.body.birthday,
+            description: req.body.pet_name+" came to the world on "+req.body.birthday,
+            likes: 0,
+            private: false,
+            photo: req.body.avatar,
+            location: "this lovely world"
+          };
+          // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
+          MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
+            if(connectionErr){
+              res.send({success: false, msg: "DB connection failed."});
+              throw connectionErr;
+            }
+            let db = client.db('Pawsgram');
+            db.collection('events').insertOne(
+                birthday_event,
+                function(operationErr, event){
+                  if(operationErr){
+                    res.send({success: false, msg: "DB insertion failed."});
+                    throw operationErr;
+                  }
+                  res.send({success: true, msg: "Successfully changed info and created birthday event."});
+                  client.close();
+                });
+          });
         });
   });
 });

@@ -32,7 +32,7 @@ router.post('/create', function(req, res, next) {
         category: req.body.category,
         date: req.body.date,
         description: req.body.description,
-        likes: parseInt(req.body.likes),
+        likes: 0,
         private: JSON.parse(req.body.private),
         photo: req.body.photo,
         location: req.body.location
@@ -234,6 +234,5 @@ function binarySearch(array, today){
 
 module.exports = router;
 
-// TODO: generate birthday upon change user info
 // TODO: automatically generate memorial events
 // TODO: 服务器上传图片

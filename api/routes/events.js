@@ -117,7 +117,7 @@ router.post('/timeline', function(req, res, next) {
                     events.splice(insert_id, 0, {category:"Today", date:todayStr});
                     db.collection('users').findOne(
                         {_id: new ObjectID(user_id)},
-                        {password: 0},
+                        {projection: {password: 0}},
                         function(operationErr2, user){
                         if(operationErr2){
                             res.send({success: false, msg: "DB find failed."});
@@ -142,7 +142,7 @@ router.post('/forYou', function(req, res, next) {
         let data = [];
         db.collection('users').find(
             {user_id: {$ne: req.session.user_id}},
-            {password: 0}
+            {projection: {password: 0}}
             )
             .toArray(
                 function(operationErr, users){
@@ -212,12 +212,13 @@ router.post('/like', function(req, res, next) {
 });
 
 function binarySearch(array, today){
+    //console.log("events:",array);
     let l = 0, h = array.length-1;
     let mid;
     let res = -1;
-    while(h < array.length && l < h){
+    while(h < array.length && l <= h){
         mid = parseInt((l+h+1)/2);
-        console.log("low:",l,"\tmid:",mid,"\thigh:",h);
+        //console.log("low:",l,"\tmid:",mid,"\thigh:",h);
         if(array[mid].date > today){
             res = mid;
             l = mid+1;
@@ -227,13 +228,12 @@ function binarySearch(array, today){
         }
     }
     res = res == -1 ? 0 : res+1;
-    console.log("res:",res);
+    //console.log("res:",res);
     return res;
 }
 
 module.exports = router;
 
-// TODO: for you page latest event date不对
-// TODO: password不应该显示
+// TODO: generate birthday upon change user info
 // TODO: automatically generate memorial events
 // TODO: 服务器上传图片

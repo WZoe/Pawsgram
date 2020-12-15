@@ -36,7 +36,7 @@ footer {
 }
 
 .color-gray {
-  background-color: #e2e0e0;
+  background-color: #e5e5e5;
 }
 
 .banner {
@@ -75,6 +75,11 @@ footer {
   z-index: 1;
 }
 
+.postToday:after{
+  background-color: #0677f4;
+  border: 10px solid lightcoral;
+}
+
 .postContent {
   padding: 20px 40px;
   margin-top: 30px;
@@ -88,6 +93,8 @@ footer {
   text-align: right;
   border-right: 15px solid lightcoral;
 }
+
+
 .likes {
   color: deeppink;
 }
@@ -118,4 +125,8 @@ footer {
 .badge-today {
   background-color: lightcoral;
   color: white;
+}
+
+.newButton > * {
+  text-shadow: 1px 1px white;
 }

@@ -10,14 +10,14 @@ $(document).ready(function (){
     $("#changeUserInfo").click(function (){
         $.post("/users/changeInfo",
             {
-                username: "Zoe",
-                password: "zoe",
-                pet_name: "Graylind",
+                username: "Eimee",
+                password: "eimee",
+                pet_name: "Brownie",
                 avatar: "photo2.png",
                 gender: "male",
                 breed: "feline",
-                color: "blue & white tabby",
-                birthday: "2020/06/11" },
+                color: "brown tabby",
+                birthday: "2020/07/31" },
             function(data, status){
                 console.log(data, status);
             });
@@ -88,7 +88,7 @@ $(document).ready(function (){
 
     $("#timeline").click(function (){
         $.post("/events/timeline",
-            // {user_id: "5fd854e2b7db0f06a3cbbe47"},
+            {user_id: "5fd7c0501fb324782a89a9dd"},
             function(data, status){
                 console.log(data, status);
             });

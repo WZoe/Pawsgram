@@ -26,7 +26,7 @@ let categories = {
 
 // create event
 router.post('/create', function(req, res, next) {
-    let new_user = {
+    let new_event = {
         user_id: req.session.user_id,
         title: req.body.title,
         category: req.body.category,
@@ -40,16 +40,16 @@ router.post('/create', function(req, res, next) {
     // add special fields
     for(let field in categories[req.body.category]){
         if(categories[req.body.category][field] == "float"){
-            new_user[field] = parseFloat(req.body[field]);
+            new_event[field] = parseFloat(req.body[field]);
         }
         else if(categories[req.body.category][field] == "int"){
-            new_user[field] = parseInt(req.body[field]);
+            new_event[field] = parseInt(req.body[field]);
         }
         else if(categories[req.body.category][field] == "bool"){
-            new_user[field] = JSON.parse(req.body[field]);
+            new_event[field] = JSON.parse(req.body[field]);
         }
         else{
-            new_user[field] = req.body[field];
+            new_event[field] = req.body[field];
         }
     }
   // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
@@ -60,7 +60,7 @@ router.post('/create', function(req, res, next) {
     }
     let db = client.db('Pawsgram');
     db.collection('events').insertOne(
-        new_user,
+        new_event,
         function(operationErr, event){
           if(operationErr){
             res.send({success: false, msg: "DB insertion failed."});
@@ -115,7 +115,10 @@ router.post('/timeline', function(req, res, next) {
                     // get insert id for today event
                     let insert_id = binarySearch(events, todayStr);
                     events.splice(insert_id, 0, {category:"Today", date:todayStr});
-                    db.collection('users').findOne({_id: new ObjectID(user_id)}, function(operationErr2, user){
+                    db.collection('users').findOne(
+                        {_id: new ObjectID(user_id)},
+                        {password: 0},
+                        function(operationErr2, user){
                         if(operationErr2){
                             res.send({success: false, msg: "DB find failed."});
                             throw operationErr2;
@@ -137,7 +140,10 @@ router.post('/forYou', function(req, res, next) {
         }
         let db = client.db('Pawsgram');
         let data = [];
-        db.collection('users').find({user_id: {$ne: req.session.user_id}})
+        db.collection('users').find(
+            {user_id: {$ne: req.session.user_id}},
+            {password: 0}
+            )
             .toArray(
                 function(operationErr, users){
                     if(operationErr){
@@ -211,6 +217,7 @@ function binarySearch(array, today){
     let res = -1;
     while(h < array.length && l < h){
         mid = parseInt((l+h+1)/2);
+        console.log("low:",l,"\tmid:",mid,"\thigh:",h);
         if(array[mid].date > today){
             res = mid;
             l = mid+1;
@@ -220,7 +227,13 @@ function binarySearch(array, today){
         }
     }
     res = res == -1 ? 0 : res+1;
+    console.log("res:",res);
     return res;
 }
 
 module.exports = router;
+
+// TODO: for you page latest event date不对
+// TODO: password不应该显示
+// TODO: automatically generate memorial events
+// TODO: 服务器上传图片

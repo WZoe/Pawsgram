@@ -80,55 +80,57 @@ function getMemorialEventDates(initial_date){
 
 // create event
 router.post('/create', function(req, res, next) {
-    let new_event = {
-        user_id: req.session.user_id,
-        title: req.body.title,
-        category: req.body.category,
-        date: req.body.date,
-        description: req.body.description,
-        likes: 0,
-        private: JSON.parse(req.body.private),
-        photo: req.body.photo,
-        location: req.body.location
-    };
-    // add special fields
-    for(let field in categories[req.body.category]){
-        if(categories[req.body.category][field] == "float"){
-            new_event[field] = parseFloat(req.body[field]);
+    if(req.body.current_user_id){
+        let new_event = {
+            user_id: req.body.current_user_id,
+            title: req.body.title,
+            category: req.body.category,
+            date: req.body.date,
+            description: req.body.description,
+            likes: 0,
+            private: JSON.parse(req.body.private),
+            photo: req.body.photo,
+            location: req.body.location
+        };
+        // add special fields
+        for(let field in categories[req.body.category]){
+            if(categories[req.body.category][field] == "float"){
+                new_event[field] = parseFloat(req.body[field]);
+            }
+            else if(categories[req.body.category][field] == "int"){
+                new_event[field] = parseInt(req.body[field]);
+            }
+            else if(categories[req.body.category][field] == "bool"){
+                new_event[field] = JSON.parse(req.body[field]);
+            }
+            else{
+                new_event[field] = req.body[field];
+            }
         }
-        else if(categories[req.body.category][field] == "int"){
-            new_event[field] = parseInt(req.body[field]);
+        // generate past memorial events
+        if(req.body.category=="Memorial"){
+            let memorial_dates = getMemorialEventDates(req.body.date);
+            memorial_dates.filter
         }
-        else if(categories[req.body.category][field] == "bool"){
-            new_event[field] = JSON.parse(req.body[field]);
-        }
-        else{
-            new_event[field] = req.body[field];
-        }
-    }
-    // generate past memorial events
-    if(req.body.category=="Memorial"){
-        let memorial_dates = getMemorialEventDates(req.body.date);
-        memorial_dates.filter
-    }
-  // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
-  MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
-    if(connectionErr){
-      res.send({success: false, msg: "DB connection failed."});
-      throw connectionErr;
-    }
-    let db = client.db('Pawsgram');
-    db.collection('events').insertOne(
-        new_event,
-        function(operationErr, event){
-          if(operationErr){
-            res.send({success: false, msg: "DB insertion failed."});
-            throw operationErr;
-          }
-          res.send({success: true, msg: "Successfully created event."});
-          client.close();
+        // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
+        MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
+            if(connectionErr){
+                res.send({success: false, msg: "DB connection failed."});
+                throw connectionErr;
+            }
+            let db = client.db('Pawsgram');
+            db.collection('events').insertOne(
+                new_event,
+                function(operationErr, event){
+                    if(operationErr){
+                        res.send({success: false, msg: "DB insertion failed."});
+                        throw operationErr;
+                    }
+                    res.send({success: true, msg: "Successfully created event."});
+                    client.close();
+                });
         });
-  });
+    }
 });
 
 // timeline: show all events for an user (others only show public events, mine show public+private events)
@@ -138,7 +140,7 @@ router.post('/timeline', function(req, res, next) {
         user_id = req.body.user_id;
     }
     else{
-        user_id = req.session.user_id;
+        user_id = req.body.current_user_id;
     }
     // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
     MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
@@ -156,7 +158,7 @@ router.post('/timeline', function(req, res, next) {
                         throw operationErr;
                     }
                     // filter out private events for non-self users
-                    if(user_id != req.session.user_id){
+                    if(user_id != req.body.current_user_id){
                         events = events.filter(event => event.private == false);
                     }
                     // get today's date
@@ -200,7 +202,7 @@ router.post('/forYou', function(req, res, next) {
         let db = client.db('Pawsgram');
         let data = [];
         db.collection('users').find(
-            {user_id: {$ne: req.session.user_id}},
+            {user_id: {$ne: req.body.current_user_id}},
             {projection: {password: 0}}
             )
             .toArray(
@@ -220,7 +222,7 @@ router.post('/forYou', function(req, res, next) {
                                     throw operationErr2;
                                 }
                                 // filter out private events for non-self users
-                                if(user._id.toString() != req.session.user_id) {
+                                if(user._id.toString() != req.body.current_user_id) {
                                     events = events.filter(event => event.private == false);
                                 }
                                 // get today's date
@@ -293,5 +295,6 @@ function binarySearch(array, today){
 
 module.exports = router;
 
+// TODO: for you include self
 // TODO: automatically generate memorial events
 // TODO: 服务器上传图片

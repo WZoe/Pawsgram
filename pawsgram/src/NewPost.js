@@ -3,7 +3,7 @@ import React, {Component} from 'react'
 class NewPost extends Component {
     state = {
         title: '',
-        category: 'photo1.png',
+        category: 'General',
         date:'1',
         description:'',
         private:'',
@@ -11,6 +11,10 @@ class NewPost extends Component {
         location:'',
         year:'2020',
         month:'1',
+        weight:'',
+        vac_name:"",
+        reason:'',
+        medication:''
     }
 // cited from https://www.taniarascia.com/getting-started-with-react/
     handleChange = (event) => {
@@ -18,6 +22,19 @@ class NewPost extends Component {
 
         this.setState({
             [name]: value,
+        })
+    }
+
+    componentDidMount() {
+        // update current date
+        let newDate = new Date()
+        let date = newDate.getDate();
+        let month = newDate.getMonth() + 1;
+        let year = newDate.getFullYear();
+        this.setState({
+            date: date,
+            month: month,
+            year: year
         })
     }
 
@@ -43,6 +60,14 @@ class NewPost extends Component {
                             </div>
                             <div className="form-group">
                                 <label >Category</label>
+                                <select className="form-control" name="category" value={this.state.category} onChange={this.handleChange}>
+                                    <option value="General" >General</option>
+                                    <option value="Activity">Activity</option>
+                                    <option value="Memorial">Memorial</option>
+                                    <option value="Weight Tracking">Weight Tracking</option>
+                                    <option value="Vaccination">Vaccination</option>
+                                    <option value="Vet Visit">Vet Visit</option>
+                                </select>
                                 {/*<input className="form-control" type="password" name="password" value={this.state.password} onChange={this.handleChange}/>*/}
                             </div>
                             <div className="form-group">
@@ -57,24 +82,54 @@ class NewPost extends Component {
                                     <label className="m-2">/</label>
                                     <input type="number" min="1" max="31" className="form-control col-2 date" name="date"
                                            value={this.state.date} onChange={this.handleChange}/>
-                                </div>                            </div>
-                            <div className="form-group">
-                                <label >Privacy</label>
-                                <input className="form-chek-input mr-2" type="radio" name="private" value="false" onChange={this.handleChange}/><label className="form-check-label mr-3">Everyone can see</label>
-                                <input className="form-chek-input mr-2" type="radio" name="private" value="true" onChange={this.handleChange}/><label
-                                className="form-check-label">Only visible to me</label>
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label >Location</label>
                                 <input className="form-control" type="text" name="location" value={this.state.location} onChange={this.handleChange}/>
                             </div>
                             <div className="form-group">
+                                <label className="mr-4">Privacy</label>
+                                <input className="form-chek-input mr-2" type="radio" name="private" value="false" onChange={this.handleChange}/><label className="form-check-label mr-3">Everyone can see</label>
+                                <input className="form-chek-input mr-2" type="radio" name="private" value="true" onChange={this.handleChange}/><label
+                                className="form-check-label">Only visible to me</label>
+                            </div>
+                            {this.state.category==="Weight Tracking" &&
+                            <div className="form-group">
+                                <label>Weight</label>
+                                <div className="input-group">
+                                <input className="form-control" type="text" name="weight" value={this.state.weight} onChange={this.handleChange}/>
+                                    <div className="input-group-append"><span className="input-group-text">kg</span></div>
+                                </div>
+                            </div>
+                            }
+                            {this.state.category==="Vaccination" &&
+                            <div className="form-group">
+                                <label>Vaccine Name</label>
+
+                                <input className="form-control" type="text" name="vac_name" value={this.state.vac_name} onChange={this.handleChange}/>
+
+                                </div>
+                            }
+                            {this.state.category==="Vet Visit" &&
+                                <div>
+                                    <div className="form-group">
+                                        <label>Symptoms</label>
+                                        <input className="form-control" type="text" name="reason" value={this.state.reason} onChange={this.handleChange}/>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Medication</label>
+                                        <textarea className="form-control" name="medication" value={this.state.medication} onChange={this.handleChange}/>
+                                    </div>
+                                </div>
+                            }
+                            <div className="form-group">
                                 <label>Photos</label>
                                 <input className="form-control" type="text" name="photo"/>
                             </div>
                             <div className="form-group">
                                 <label>Description</label>
-                                <input className="form-control" type="text" name="description"/>
+                                <textarea rows="5" className="form-control" name="description" value={this.state.description} onChange={this.handleChange}/>
                             </div>
                         </div>
                         <div className="modal-footer">

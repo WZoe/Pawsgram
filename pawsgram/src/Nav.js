@@ -24,7 +24,10 @@ class Nav extends Component {
             return (
                 <nav id="navbar" className="color-light fixed-top">
                     <div className="p-2 d-flex justify-content-around align-items-center">
-                        <button className="btn ml-5 "><img src={process.env.PUBLIC_URL + '/img/' + currentUser.avatar}
+                        <button className="btn ml-5" onClick={() => {
+                            this.props.setTimelineOwner(this.props.currentUser.user_id);
+                            this.props.switchToTimeline()
+                        }}><img src={process.env.PUBLIC_URL + '/img/' + currentUser.avatar}
                                                            width="50" height="50"
                                                            className="d-inline-block align-top rounded-circle"
                                                            alt=""/><span

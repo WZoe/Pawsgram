@@ -130,3 +130,29 @@ footer {
 .newButton > * {
   text-shadow: 1px 1px white;
 }
+
+.color-activity {
+  background-color: orangered;
+}
+
+.color-memorial {
+  background-color: lightseagreen;
+}
+
+.color-weight {
+  background-color: orange;
+}
+
+.color-vac {
+  background-color: darkslateblue;
+}
+
+.color-vet {
+  background-color: black;
+}
+
+.whatsnew {
+  width: 200px;
+  height:200px;
+  float: right;
+}

@@ -5,7 +5,7 @@ class SignUp extends Component {
         username:'',
         password:'',
         pet_name: '',
-        avatar: 'photo1.png',
+        avatar: 'avatar.png',
         gender:'male',
         breed:'',
         color:'',
@@ -22,6 +22,17 @@ class SignUp extends Component {
         })
     }
 
+    componentDidMount() {
+        let newDate = new Date()
+        let date = newDate.getDate();
+        let month = newDate.getMonth() + 1;
+        let year = newDate.getFullYear();
+        this.setState({
+            date: date,
+            month: month,
+            year: year
+        })
+    }
 
     render() {
         const {currentUser, page, timelineOwner} = this.props

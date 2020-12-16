@@ -1,100 +1,142 @@
 import React, {Component} from 'react'
 import NewButton from "./NewButton";
+import NewPost from "./NewPost";
+import Like from "./Like";
 
 class TimelinePage extends Component {
     state = {
-        user:{
-            user_id: 1,
-            username: "Zoe",
-            pet_name: "Graylind",
-            avatar: "photo1.png",
-            gender: "male",
-            breed: "feline",
-            color: "blue & white tabby",
-            birthday: "2020/06/11"
-        },
-        data:[
-            {
-                id: 1,
-                user_id:1,
-                title: "Graylind's Weight",
-                category: "Weight Tracking",
-                date: "2020/12/15",
-                description: "Graylind's Weight Description",
-                likes: 5,
-                private: false,
-                photo: "",
-                location: "St. Louis",
-                weight: 3.3,
-                future:true
-            },
-            {
-                category: "Today",
-                date: "2020/12/13"},
-            {
-                id: 1,
-                user_id:1,
-                title: "Graylind's Weight",
-                category: "Weight Tracking",
-                date: "2020/12/12",
-                description: "Graylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight Description",
-                likes: 5,
-                private: true,
-                photo: ["photo2.jpeg", "photo1.png", "photo3.jpg"],
-                vac_name:"rabies",
-                location: "St. Louis",
-            },
-            {
-                id: 1,
-                user_id:1,
-                title: "Graylind's Weight",
-                category: "Weight Tracking",
-                date: "2020/12/12",
-                description: "Graylind's Weight Description",
-                likes: 5,
-                private: false,
-                photo: ["photo1.png", "photo1.png", "photo1.png"],
-                location: "St. Louis",
-            },
-            {
-                id: 1,
-                user_id:1,
-                title: "Graylind's Weight",
-                category: "Weight Tracking",
-                date: "2020/12/12",
-                likes: 5,
-                private: false,
-            },
-            {
-                id: 1,
-                user_id:1,
-                title: "Graylind's Weight",
-                category: "Weight Tracking",
-                date: "2020/12/12",
-                description: "Graylind's Weight Description",
-                likes: 5,
-                private: false,
-                photo: "",
-                location: "St. Louis",
-            },
-            {
-                id: 1,
-                user_id:1,
-                title: "Graylind's Weight",
-                category: "Weight Tracking",
-                date: "2020/12/12",
-                description: "Graylind's Weight Description",
-                likes: 5,
-                private: false,
-                photo: "",
-                location: "St. Louis",
-            },
-
-        ],
+        user:{},
+        // user:{
+        //     user_id: 1,
+        //     username: "Zoe",
+        //     pet_name: "Graylind",
+        //     avatar: "photo1.png",
+        //     gender: "male",
+        //     breed: "feline",
+        //     color: "blue & white tabby",
+        //     birthday: "2020/06/11"
+        // },
+        data:[]
+        // data:[
+        //     {
+        //         id: 1,
+        //         user_id:1,
+        //         title: "Graylind's Weight",
+        //         category: "Weight Tracking",
+        //         date: "2020/12/15",
+        //         description: "Graylind's Weight Description",
+        //         likes: 5,
+        //         private: false,
+        //         photo: "",
+        //         location: "St. Louis",
+        //         weight: 3.3,
+        //         future:true
+        //     },
+        //     {
+        //         category: "Today",
+        //         date: "2020/12/13"},
+        //     {
+        //         id: 1,
+        //         user_id:1,
+        //         title: "Graylind's Weight",
+        //         category: "Weight Tracking",
+        //         date: "2020/12/12",
+        //         description: "Graylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight DescriptionGraylind's Weight Description",
+        //         likes: 5,
+        //         private: true,
+        //         photo: ["photo2.jpeg", "photo1.png", "photo3.jpg"],
+        //         vac_name:"rabies",
+        //         location: "St. Louis",
+        //     },
+        //     {
+        //         id: 1,
+        //         user_id:1,
+        //         title: "Graylind's Weight",
+        //         category: "Weight Tracking",
+        //         date: "2020/12/12",
+        //         description: "Graylind's Weight Description",
+        //         likes: 5,
+        //         private: false,
+        //         photo: ["photo1.png", "photo1.png", "photo1.png"],
+        //         location: "St. Louis",
+        //     },
+        //     {
+        //         id: 1,
+        //         user_id:1,
+        //         title: "Graylind's Weight",
+        //         category: "Weight Tracking",
+        //         date: "2020/12/12",
+        //         likes: 5,
+        //         private: false,
+        //     },
+        //     {
+        //         id: 1,
+        //         user_id:1,
+        //         title: "Graylind's Weight",
+        //         category: "Weight Tracking",
+        //         date: "2020/12/12",
+        //         description: "Graylind's Weight Description",
+        //         likes: 5,
+        //         private: false,
+        //         photo: "",
+        //         location: "St. Louis",
+        //     },
+        //     {
+        //         id: 1,
+        //         user_id:1,
+        //         title: "Graylind's Weight",
+        //         category: "Weight Tracking",
+        //         date: "2020/12/12",
+        //         description: "Graylind's Weight Description",
+        //         likes: 5,
+        //         private: false,
+        //         photo: "",
+        //         location: "St. Louis",
+        //     },
+        //
+        // ],
     }
 
     fetchTimeline =() => {
+        const endpoint = "http://ec2-18-206-208-42.compute-1.amazonaws.com:3000"
+        const api="/events/timeline"
+        const url = endpoint+api
 
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body:JSON.stringify({
+                current_user_id:localStorage.getItem("current_user_id"),
+                user_id:this.props.timelineOwner.user_id
+            })
+        })
+            .then((result) => result.json())
+            .then((result) => {
+                this.props.updateError(result)
+                if (result.success) {
+                    //success, update timeline
+                    console.log(result)
+                    this.setState({
+                        user: result.user,
+                        data: result.data
+                    })
+                    return result
+                } else {
+                    //failed, return {success:false, msg:}
+                    return result
+                }
+            })
+    }
+
+    likePlus = (index) => {
+        let newData = this.state.data
+        newData[index].likes +=1
+        this.setState({
+            data: newData
+        })
     }
 
     newPost = (info) => {
@@ -103,6 +145,7 @@ class TimelinePage extends Component {
         const url = endpoint+api
 
         info['date'] = info.year+'/'+info.month+'/'+info.date
+        info["current_user_id"]=localStorage.getItem("current_user_id")
 
         fetch(url, {
             method: 'POST',
@@ -114,9 +157,11 @@ class TimelinePage extends Component {
         })
             .then((result) => result.json())
             .then((result) => {
+                this.props.updateError(result)
                 if (result.success) {
                     //success, update timeline
-
+                    this.props.setTimelineOwner(localStorage.getItem("current_user_id"))
+                    this.fetchTimeline()
                     return result
                 } else {
                     //failed, return {success:false, msg:}
@@ -127,13 +172,11 @@ class TimelinePage extends Component {
 
     componentDidMount() {
             this.fetchTimeline()
-
     }
 
     render() {
         const {user,data} = this.state
         const {currentUser, page, timelineOwner} = this.props
-        // 后端传数据来的时候在today哪里加一个事件
 
         const posts = data.map((entry, index) => {
             if (entry.title) {
@@ -143,13 +186,27 @@ class TimelinePage extends Component {
                 } else {
                     eventCSS+= " color-light"
                 }
+
+                const catColor ={
+                    General: "badge badge-primary",
+                    Activity: "badge badge-primary color-activity",
+                    Memorial: "badge badge-primary color-memorial",
+                    "Weight Tracking": "badge badge-primary color-weight",
+                    Vaccination:"badge badge-primary color-vac",
+                    "Vet Visit": "badge badge-primary color-vet",
+                    Generated: "badge badge-primary color-memorial",
+                }
+
+                const cat = entry.category==="Generated"? "Memorial":entry.category
+
                 return (
-                    <li className="post row" key={index} >
+                    <li className="post row" id={entry._id} key={index} >
                         <div className="postTimeline col-3">
                             <h3>{entry.date}</h3>
-                            <h5><span className="badge badge-primary">{entry.category}</span></h5>
+                            <h5><span className={catColor[cat]}>{cat}</span></h5>
                             <h3 className="likes"><i className="fas fa-heart mr-2"></i><i className="fas fa-times"> {entry.likes}</i></h3>
-                            {/*<button className="btn btn-danger"><i className="fas fa-heart mr-2"></i>+ 1 </button>*/}
+                            {localStorage.getItem("current_user_id")!==timelineOwner.user_id &&<Like event_id={entry._id} index={index} likePlus={this.likePlus}/>
+                            }
                         </div>
                         <div className={eventCSS}>
                             <h3>{entry.private && <i className="fas fa-eye-slash mr-2"></i>}{entry.title}</h3>
@@ -186,17 +243,17 @@ class TimelinePage extends Component {
         })
         return (
                 <ul className="postList">
-                    <NewButton currentUser={currentUser} page={page} timelineOwner={timelineOwner}/>
-
+                    <NewButton currentUser={currentUser} page={page} timelineOwner={timelineOwner} newPost={this.newPost}/>
+                    <NewPost newPost={this.newPost}/>
                     {/*Pet info*/}
                     <div className="row">
                         <div className="col-3 postTimeline">
-                            <img src={process.env.PUBLIC_URL + '/img/photo1.png'} width="200" height="200"
+                            <img src={process.env.PUBLIC_URL + user.avatar} width="200" height="200"
                                  className="d-inline-block align-top rounded-circle" alt=""/>
 
                         </div>
                         <div className="col-9 postContent color-white">
-                            <h1 className="">Graylind</h1>
+                            <h1 className="">{user.pet_name}</h1>
                             <h5>Owner:  {user.username}</h5>
                             <h5>Gender: {user.gender === "male"? <i className="fas fa-mars"></i>:
                                 <i className="fas fa-venus"></i>}</h5>

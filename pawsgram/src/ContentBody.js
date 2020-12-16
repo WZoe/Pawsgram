@@ -1,6 +1,7 @@
 import React, {Component} from 'react'
 import TimelinePage from "./TimelinePage";
 import DiscoverPage from "./DiscoverPage";
+import Nav from "./Nav";
 
 class ContentBody extends Component {
 
@@ -20,9 +21,9 @@ class ContentBody extends Component {
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>}
-                    {page==="Timeline" &&<TimelinePage currentUser={currentUser} timelineOwner={timelineOwner} page={page}/>
+                    {page==="Timeline" &&<TimelinePage updateError={this.props.updateError} currentUser={currentUser} timelineOwner={timelineOwner} page={page} setTimelineOwner={this.props.setTimelineOwner}/>
                     }
-                    {page==="Discover" && <DiscoverPage currentUser={currentUser} timelineOwner={timelineOwner} page={page}/>}
+                    {page==="Discover" && <DiscoverPage currentUser={currentUser} timelineOwner={timelineOwner} page={page} switchToTimeline={this.props.switchToTimeline} setTimelineOwner={this.props.setTimelineOwner}/>}
                 </div>
             )
     }

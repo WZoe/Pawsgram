@@ -1,4 +1,5 @@
 import React, {Component} from 'react'
+import NewPost from "./NewPost";
 
 class NewButton extends Component {
     render() {

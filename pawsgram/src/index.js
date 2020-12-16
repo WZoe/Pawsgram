@@ -60,22 +60,36 @@ class App extends React.Component {
         const api="/users/getCurrentUser"
         const url = endpoint+api
 
-        fetch(url, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            method: 'POST',
-        })
-            .then((result) => result.json())
-            .then((result) => {
-                console.log(result)
-                this.setState({
-                    currentUser:result,
+        console.log(localStorage.getItem("current_user_id"))
+        if (localStorage.getItem("current_user_id") !==null) {
+            fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                method: 'POST',
+                body: JSON.stringify({
+                    current_user_id: localStorage.getItem("current_user_id")
                 })
-                return result
             })
+                .then((result) => result.json())
+                .then((result) => {
+                    // this.updateError(result)
+                    console.log(result)
+                    this.setState({
+                        currentUser:result,
+                    })
+                    return result
+                })
+        } else {
+            this.setState({
+                currentUser:{logged_in:false}
+            })
+            console.log("not logged in")
+        }
+
+
     }
 
     setTimelineOwner = (userID) => {
@@ -87,32 +101,41 @@ class App extends React.Component {
     }
 
     userLogOut = () => {
-        const endpoint = "http://ec2-18-206-208-42.compute-1.amazonaws.com:3000"
-        const api="/users/logout"
-        const url = endpoint+api
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
+        localStorage.removeItem("current_user_id")
+        this.setState({
+            currentUser:{logged_in:false},
+            page: "Discover"
         })
-            .then((result) => result.json())
-            .then((result) => {
-                if (result.success) {
-                    //logout success
-                    this.setState({
-                        currentUser:{logged_in:false},
-                        page: "Discover"
-                    })
-                    return result
-                } else {
-                    //failed, return {success:false, msg:}
-                    return result
-                }
-            })
+        //
+        // const endpoint = "http://ec2-18-206-208-42.compute-1.amazonaws.com:3000"
+        // const api="/users/logout"
+        // const url = endpoint+api
+        //
+        // fetch(url, {
+        //     method: 'POST',
+        //     headers: {
+        //         'Accept': 'application/json',
+        //         'Content-Type': 'application/json'
+        //     },
+        //     body : {
+        //         current_user_id: localStorage.getItem("current_user_id")
+        //     },
+        //     credentials: 'include',
+        // })
+        //     .then((result) => result.json())
+        //     .then((result) => {
+        //         if (result.success) {
+        //             //logout success
+        //             this.setState({
+        //                 currentUser:{logged_in:false},
+        //                 page: "Discover"
+        //             })
+        //             return result
+        //         } else {
+        //             //failed, return {success:false, msg:}
+        //             return result
+        //         }
+        //     })
     }
 
     userLogIn = (username, password) => {
@@ -138,6 +161,7 @@ class App extends React.Component {
                 console.log(result)
                 if (result.success) {
                     //success, fetch current user
+                    localStorage.setItem("current_user_id", result.current_user_id)
                     this.getCurrentUser()
                 }
             })
@@ -147,8 +171,6 @@ class App extends React.Component {
         const endpoint = "http://ec2-18-206-208-42.compute-1.amazonaws.com:3000"
         const api="/users/signUp"
         const url = endpoint+api
-
-        info['birthday'] = info.year+'/'+info.month+'/'+info.date
 
         fetch(url, {
             method: 'POST',
@@ -167,19 +189,21 @@ class App extends React.Component {
                 this.updateError(result)
                 if (result.success) {
                     //success, update info and fetch current user
-                    let result = this.userChangeInfo(info)
-                    if (result.success) (
-                        //success, fetch current user
-                        this.getCurrentUser()
-                    )
+                    console.log(result)
+                    localStorage.setItem("current_user_id", result.current_user_id)
+                    this.userChangeInfo(info)
                 }
-            })
+                }
+            )
     }
 
     userChangeInfo = (info) => {
         const endpoint = "http://ec2-18-206-208-42.compute-1.amazonaws.com:3000"
         const api="/users/changeInfo"
         const url = endpoint+api
+
+        info['birthday'] = info.year+'/'+info.month+'/'+info.date
+        info["current_user_id"]=localStorage.getItem("current_user_id")
 
         fetch(url, {
             method: 'POST',
@@ -192,8 +216,10 @@ class App extends React.Component {
         })
             .then((result) => result.json())
             .then((result) => {
+                this.updateError(result)
                 if (result.success) {
-                    //success, fetch current user and update timeline owner
+                    //success, change info
+                    this.getCurrentUser()
                     return result
                 } else {
                     //failed, return {success:false, msg:}
@@ -205,7 +231,7 @@ class App extends React.Component {
     componentDidMount() {
         //fetch currentUser
         this.getCurrentUser()
-        this.setTimelineOwner(this.state.currentUser.user_id)
+        // this.setTimelineOwner(this.state.currentUser.user_id)
     }
 
     render() {
@@ -213,12 +239,11 @@ class App extends React.Component {
 
         return (
             <div>
-            <ContentBody currentUser={currentUser} page={page} timelineOwner={timelineOwner} error={error}/>
+            <ContentBody currentUser={currentUser} page={page} timelineOwner={timelineOwner} error={error}  updateError={this.updateError} setTimelineOwner={this.setTimelineOwner} switchToTimeline={this.switchToTimeline}/>
             <Nav currentUser={currentUser} page={page}
                  userLogOut={this.userLogOut} setTimelineOwner={this.setTimelineOwner} switchToTimeline={this.switchToTimeline} switchToDiscover={this.switchToDiscover}/>
             <LogIn userLogIn={this.userLogIn}/>
             <SignUp userSignUp={this.userSignUp}/>
-            <NewPost/>
             </div>
         )
     }

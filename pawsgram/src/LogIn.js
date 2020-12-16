@@ -40,7 +40,7 @@ class LogIn extends Component {
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button type="button" className="btn btn-primary" id="logInSubmit" data-dismiss="modal" data-target="logIn" onClick={()=>{this.props.userLogIn(this.state.username, this.state.password)}}>log In</button>
+                            <button type="button" className="btn btn-primary" id="logInSubmit" data-dismiss="modal" data-target="#logIn" onClick={()=>{this.props.userLogIn(this.state.username, this.state.password)}}>log In</button>
                         </div>
                     </div>
                 </div>

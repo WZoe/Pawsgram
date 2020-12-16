@@ -3,10 +3,11 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import Nav from './Nav'
 import NewButton from "./NewButton";
-import TimelinePage from "./TimelinePage";
+import TimelinePage from "./ContentBody";
 import LogIn from "./LogIn";
 import SignUp from "./SignUp";
 import NewPost from "./NewPost";
+import ContentBody from "./ContentBody";
 
 class App extends React.Component {
     state={
@@ -60,11 +61,12 @@ class App extends React.Component {
         const url = endpoint+api
 
         fetch(url, {
-            method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
+            credentials: 'include',
+            method: 'POST',
         })
             .then((result) => result.json())
             .then((result) => {
@@ -95,6 +97,7 @@ class App extends React.Component {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
+            credentials: 'include',
         })
             .then((result) => result.json())
             .then((result) => {
@@ -118,12 +121,12 @@ class App extends React.Component {
         const url = endpoint+api
 
         fetch(url, {
-            method: 'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
+            method: 'POST',
             body:JSON.stringify({
                 username : username,
                 password: password
@@ -140,10 +143,12 @@ class App extends React.Component {
             })
     }
 
-    userSignUp = (username, password, info) => {
+    userSignUp = (info) => {
         const endpoint = "http://ec2-18-206-208-42.compute-1.amazonaws.com:3000"
         const api="/users/signUp"
         const url = endpoint+api
+
+        info['birthday'] = info.year+'/'+info.month+'/'+info.date
 
         fetch(url, {
             method: 'POST',
@@ -151,9 +156,10 @@ class App extends React.Component {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body:JSON.stringify({
-                username : username,
-                password: password
+                username : info.username,
+                password: info.password
             })
         })
             .then((result) => result.json())
@@ -181,6 +187,7 @@ class App extends React.Component {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body:JSON.stringify(info)
         })
             .then((result) => result.json())
@@ -206,7 +213,7 @@ class App extends React.Component {
 
         return (
             <div>
-            <TimelinePage currentUser={currentUser} page={page} timelineOwner={timelineOwner} error={error}/>
+            <ContentBody currentUser={currentUser} page={page} timelineOwner={timelineOwner} error={error}/>
             <Nav currentUser={currentUser} page={page}
                  userLogOut={this.userLogOut} setTimelineOwner={this.setTimelineOwner} switchToTimeline={this.switchToTimeline} switchToDiscover={this.switchToDiscover}/>
             <LogIn userLogIn={this.userLogIn}/>

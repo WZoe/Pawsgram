@@ -55,7 +55,6 @@ class Nav extends Component {
                             <button className="btn btn-lg btn-secondary" data-toggle="modal" data-target="#signUp">Sign Up</button>
                         </div>
                     </div>
-             {/*modal is modified from https://getbootstrap.com/docs/4.0/components/modal/*/}
                 </nav>
             )
         }

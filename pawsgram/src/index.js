@@ -2,17 +2,14 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import Nav from './Nav'
-import NewButton from "./NewButton";
-import TimelinePage from "./ContentBody";
+import ContentBody from "./ContentBody";
 import LogIn from "./LogIn";
 import SignUp from "./SignUp";
-import NewPost from "./NewPost";
-import ContentBody from "./ContentBody";
 
 class App extends React.Component {
-    state={
-        currentUser:{
-            logged_in:false,
+    state = {
+        currentUser: {
+            logged_in: false,
             // user_id:1,
             // username: "Zoe",
             // pet_name: "Graylind",
@@ -22,20 +19,24 @@ class App extends React.Component {
         error: {
             hasError: false,
             msg: ''
+        },
+        posts: {
+            user: {},
+            data: []
         }
     }
 
-    updateError = (result) =>{
+    updateError = (result) => {
         if (!result.success) {
             this.setState({
-                error:{
+                error: {
                     hasError: true,
                     msg: result.msg
                 }
             })
         } else {
             this.setState({
-                error:{
+                error: {
                     hasError: false,
                     msg: ''
                 }
@@ -45,23 +46,23 @@ class App extends React.Component {
 
     switchToTimeline = () => {
         this.setState({
-            page:"Timeline"
+            page: "Timeline"
         })
     }
 
     switchToDiscover = () => {
         this.setState({
-            page:"Discover"
+            page: "Discover"
         })
     }
 
     getCurrentUser = () => {
         const endpoint = "http://ec2-18-206-208-42.compute-1.amazonaws.com:3000"
-        const api="/users/getCurrentUser"
-        const url = endpoint+api
+        const api = "/users/getCurrentUser"
+        const url = endpoint + api
 
         console.log(localStorage.getItem("current_user_id"))
-        if (localStorage.getItem("current_user_id") !==null) {
+        if (localStorage.getItem("current_user_id") !== null) {
             fetch(url, {
                 headers: {
                     'Accept': 'application/json',
@@ -78,13 +79,16 @@ class App extends React.Component {
                     // this.updateError(result)
                     console.log(result)
                     this.setState({
-                        currentUser:result,
+                        currentUser: result,
                     })
+                    if (!this.state.timelineOwner) {
+                        this.setTimelineOwner(localStorage.getItem("current_user_id"))
+                    }
                     return result
                 })
         } else {
             this.setState({
-                currentUser:{logged_in:false}
+                currentUser: {logged_in: false}
             })
             console.log("not logged in")
         }
@@ -92,18 +96,20 @@ class App extends React.Component {
 
     }
 
-    setTimelineOwner = (userID) => {
+    setTimelineOwner = (userID, change) => {
+        console.log("setting owner to " + userID)
         this.setState({
             timelineOwner: {
                 user_id: userID
             }
         })
+        this.fetchTimeline(userID, change)
     }
 
     userLogOut = () => {
         localStorage.removeItem("current_user_id")
         this.setState({
-            currentUser:{logged_in:false},
+            currentUser: {logged_in: false},
             page: "Discover"
         })
         //
@@ -140,8 +146,8 @@ class App extends React.Component {
 
     userLogIn = (username, password) => {
         const endpoint = "http://ec2-18-206-208-42.compute-1.amazonaws.com:3000"
-        const api="/users/login"
-        const url = endpoint+api
+        const api = "/users/login"
+        const url = endpoint + api
 
         fetch(url, {
             headers: {
@@ -150,8 +156,8 @@ class App extends React.Component {
             },
             credentials: 'include',
             method: 'POST',
-            body:JSON.stringify({
-                username : username,
+            body: JSON.stringify({
+                username: username,
                 password: password
             })
         })
@@ -169,8 +175,8 @@ class App extends React.Component {
 
     userSignUp = (info) => {
         const endpoint = "http://ec2-18-206-208-42.compute-1.amazonaws.com:3000"
-        const api="/users/signUp"
-        const url = endpoint+api
+        const api = "/users/signUp"
+        const url = endpoint + api
 
         fetch(url, {
             method: 'POST',
@@ -179,31 +185,31 @@ class App extends React.Component {
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
-            body:JSON.stringify({
-                username : info.username,
+            body: JSON.stringify({
+                username: info.username,
                 password: info.password
             })
         })
             .then((result) => result.json())
             .then((result) => {
-                this.updateError(result)
-                if (result.success) {
-                    //success, update info and fetch current user
-                    console.log(result)
-                    localStorage.setItem("current_user_id", result.current_user_id)
-                    this.userChangeInfo(info)
-                }
+                    this.updateError(result)
+                    if (result.success) {
+                        //success, update info and fetch current user
+                        console.log(result)
+                        localStorage.setItem("current_user_id", result.current_user_id)
+                        this.userChangeInfo(info)
+                    }
                 }
             )
     }
 
     userChangeInfo = (info) => {
         const endpoint = "http://ec2-18-206-208-42.compute-1.amazonaws.com:3000"
-        const api="/users/changeInfo"
-        const url = endpoint+api
+        const api = "/users/changeInfo"
+        const url = endpoint + api
 
-        info['birthday'] = info.year+'/'+info.month+'/'+info.date
-        info["current_user_id"]=localStorage.getItem("current_user_id")
+        info['birthday'] = info.year + '/' + info.month + '/' + info.date
+        info["current_user_id"] = localStorage.getItem("current_user_id")
 
         fetch(url, {
             method: 'POST',
@@ -212,7 +218,7 @@ class App extends React.Component {
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
-            body:JSON.stringify(info)
+            body: JSON.stringify(info)
         })
             .then((result) => result.json())
             .then((result) => {
@@ -228,6 +234,55 @@ class App extends React.Component {
             })
     }
 
+    fetchTimeline = (user_id, change) => {
+        const endpoint = "http://ec2-18-206-208-42.compute-1.amazonaws.com:3000"
+        const api = "/events/timeline"
+        const url = endpoint + api
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                current_user_id: localStorage.getItem("current_user_id"),
+                user_id: user_id
+            })
+        })
+            .then((result) => result.json())
+            .then((result) => {
+                this.updateError(result)
+                if (result.success) {
+                    //success, update timeline
+                    console.log(result)
+                    this.setState({
+                        posts: {
+                            user: result.user,
+                            data: result.data
+                        }
+                    })
+                    if (change) {
+                        this.switchToTimeline()
+                    }
+                    return result
+                } else {
+                    //failed, return {success:false, msg:}
+                    return result
+                }
+            })
+    }
+
+    likePlus = (index) => {
+        let newData = this.state.posts.data
+        newData[index].likes += 1
+        this.setState({
+            posts: {
+                data: newData
+            }
+        })
+    }
+
     componentDidMount() {
         //fetch currentUser
         this.getCurrentUser()
@@ -239,17 +294,21 @@ class App extends React.Component {
 
         return (
             <div>
-            <ContentBody currentUser={currentUser} page={page} timelineOwner={timelineOwner} error={error}  updateError={this.updateError} setTimelineOwner={this.setTimelineOwner} switchToTimeline={this.switchToTimeline}/>
-            <Nav currentUser={currentUser} page={page}
-                 userLogOut={this.userLogOut} setTimelineOwner={this.setTimelineOwner} switchToTimeline={this.switchToTimeline} switchToDiscover={this.switchToDiscover}/>
-            <LogIn userLogIn={this.userLogIn}/>
-            <SignUp userSignUp={this.userSignUp}/>
+                <ContentBody likePlus={this.likePlus} fetchTimeline={this.fetchTimeline} posts={this.state.posts}
+                             currentUser={currentUser} page={page} timelineOwner={timelineOwner} error={error}
+                             updateError={this.updateError} setTimelineOwner={this.setTimelineOwner}
+                             switchToTimeline={this.switchToTimeline}/>
+                <Nav currentUser={currentUser} page={page}
+                     userLogOut={this.userLogOut} setTimelineOwner={this.setTimelineOwner}
+                     switchToTimeline={this.switchToTimeline} switchToDiscover={this.switchToDiscover}/>
+                <LogIn userLogIn={this.userLogIn}/>
+                <SignUp userSignUp={this.userSignUp}/>
             </div>
         )
     }
 }
 
-ReactDOM.render(<App />, document.getElementById('root'))
+ReactDOM.render(<App/>, document.getElementById('root'))
 // ReactDOM.render(<TimelinePage />, document.getElementById('root'))
 // ReactDOM.render(<NewButton />, document.getElementById('newButton'))
 // ReactDOM.render(<Nav />, document.getElementById('navbar'))

@@ -2,8 +2,8 @@ import React, {Component} from 'react'
 
 class LogIn extends Component {
     state = {
-        username:'',
-        password:'',
+        username: '',
+        password: '',
     }
 // cited from https://www.taniarascia.com/getting-started-with-react/
     handleChange = (event) => {
@@ -32,15 +32,21 @@ class LogIn extends Component {
                             {/*form group is modified from https://getbootstrap.com/docs/4.0/components/forms/-->*/}
                             <div className="form-group">
                                 <label htmlFor="username">Username </label>
-                                <input className="form-control" type="text" id="username" name="username" value={this.state.username} onChange={this.handleChange}/>
+                                <input className="form-control" type="text" id="username" name="username"
+                                       value={this.state.username} onChange={this.handleChange}/>
                             </div>
                             <div className="form-group">
                                 <label htmlFor="password">Password</label>
-                                <input className="form-control" type="password" id="password" name="password" value={this.state.password} onChange={this.handleChange}/>
+                                <input className="form-control" type="password" id="password" name="password"
+                                       value={this.state.password} onChange={this.handleChange}/>
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button type="button" className="btn btn-primary" id="logInSubmit" data-dismiss="modal" data-target="#logIn" onClick={()=>{this.props.userLogIn(this.state.username, this.state.password)}}>log In</button>
+                            <button type="button" className="btn btn-primary" id="logInSubmit" data-dismiss="modal"
+                                    data-target="#logIn" onClick={() => {
+                                this.props.userLogIn(this.state.username, this.state.password)
+                            }}>log In
+                            </button>
                         </div>
                     </div>
                 </div>

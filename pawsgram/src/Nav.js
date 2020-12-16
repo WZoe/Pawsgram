@@ -6,12 +6,10 @@ class Nav extends Component {
         const {currentUser, page} = this.props
 
         let timelineBtn = <button className="btn btn-lg btn-light" onClick={() => {
-            this.props.setTimelineOwner(this.props.currentUser.user_id);
-            this.props.switchToTimeline()
+            this.props.setTimelineOwner(this.props.currentUser.user_id, true);
         }}>Timeline</button>
         let timelineBtnSelected = <button className="btn btn-lg btn-dark" onClick={() => {
-            this.props.setTimelineOwner(this.props.currentUser.user_id);
-            this.props.switchToTimeline()
+            this.props.setTimelineOwner(this.props.currentUser.user_id, true);
         }}>Timeline</button>
         let discoverBtn = <button className="btn btn-lg btn-light" onClick={() => {
             this.props.switchToDiscover()
@@ -25,12 +23,11 @@ class Nav extends Component {
                 <nav id="navbar" className="color-light fixed-top">
                     <div className="p-2 d-flex justify-content-around align-items-center">
                         <button className="btn ml-5" onClick={() => {
-                            this.props.setTimelineOwner(this.props.currentUser.user_id);
-                            this.props.switchToTimeline()
+                            this.props.setTimelineOwner(this.props.currentUser.user_id, true);
                         }}><img src={process.env.PUBLIC_URL + '/img/' + currentUser.avatar}
-                                                           width="50" height="50"
-                                                           className="d-inline-block align-top rounded-circle"
-                                                           alt=""/><span
+                                width="50" height="50"
+                                className="d-inline-block align-top rounded-circle"
+                                alt=""/><span
                             className="h1 ml-2 text-color-primary ">{currentUser.pet_name}</span></button>
                         <div className="btn-group">
                             {page === "Timeline" && timelineBtnSelected}
@@ -54,8 +51,11 @@ class Nav extends Component {
                             {discoverBtnSelected}
                         </div>
                         <div className="btn-group">
-                            <button className="btn btn-lg btn-primary" data-toggle="modal" data-target="#logIn">Log In</button>
-                            <button className="btn btn-lg btn-secondary" data-toggle="modal" data-target="#signUp">Sign Up</button>
+                            <button className="btn btn-lg btn-primary" data-toggle="modal" data-target="#logIn">Log In
+                            </button>
+                            <button className="btn btn-lg btn-secondary" data-toggle="modal" data-target="#signUp">Sign
+                                Up
+                            </button>
                         </div>
                     </div>
                 </nav>

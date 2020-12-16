@@ -1,14 +1,14 @@
 $(document).ready(function (){
     // users
     $("#register").click(function (){
-        $.post("/users/signUp", { username: "Test", password: "test"},
+        $.post("http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/users/signUp", { username: "Test", password: "test"},
             function(data, status){
                 console.log(data, status);
             });
     });
 
     $("#changeUserInfo").click(function (){
-        $.post("/users/changeInfo",
+        $.post("http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/users/changeInfo",
             {
                 pet_name: "Brownie",
                 avatar: "photo2.png",
@@ -25,7 +25,7 @@ $(document).ready(function (){
         let username = $("#username").val();
         let password = $("#password").val();
         console.log("input username:",username,"\tinput password:",password);
-        $.post("/users/login", { username: username, password: password},
+        $.post("http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/users/login", { username: username, password: password},
             function(data, status){
                 console.log(data, status);
                 console.log(data.success);
@@ -34,14 +34,14 @@ $(document).ready(function (){
     });
 
     $("#logout").click(function (){
-        $.post("/users/logout",
+        $.post("http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/users/logout",
             function(data, status){
                 console.log(data, status);
             });
     });
 
     $("#getCurrentUser").click(function (){
-        $.post("/users/getCurrentUser",
+        $.post("http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/users/getCurrentUser",
             function(data, status){
                 console.log(data, status);
                 console.log(data.logged_in);
@@ -56,7 +56,6 @@ $(document).ready(function (){
             //     category: "Weight Tracking",
             //     date: "2020/12/15",
             //     description: "Graylind's weight description",
-            //     likes: 5,
             //     private: false,
             //     photo: "",
             //     location: "St. Louis",
@@ -67,23 +66,30 @@ $(document).ready(function (){
             //     category: "Vaccination",
             //     date: "2020/12/15",
             //     description: "vaccination",
-            //     likes: 5,
             //     private: false,
             //     photo: "",
             //     location: "St. Louis",
             //     vac_name: "Rabies"
             // },
+            // {
+            //     title: "vet visit",
+            //     category: "Vet Visit",
+            //     date: "2020/12/15",
+            //     description: "vet visit",
+            //     private: false,
+            //     photo: "",
+            //     location: "St. Louis",
+            //     reason: "dental issues",
+            //     medication: "xxx medication"
+            // },
             {
-                title: "vet visit",
-                category: "Vet Visit",
-                date: "2020/12/15",
-                description: "vet visit",
-                likes: 5,
+                title: "adoption",
+                category: "Memorial",
+                date: "2020/02/29",
+                description: "come to his new home!",
                 private: false,
-                photo: "",
-                location: "St. Louis",
-                reason: "dental issues",
-                medication: "xxx medication"
+                photo: "photo.png",
+                location: "St. Louis"
             },
             function(data, status){
                 console.log(data, status);

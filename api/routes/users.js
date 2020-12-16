@@ -66,6 +66,7 @@ router.post('/login', function(req, res, next) {
           if(user){
             // set session
             req.session.user_id = user._id;
+              console.log("req.session in login:",req.session);
             res.send({success: true, msg: "Successfully logged in."});
           }
           else{
@@ -84,6 +85,7 @@ router.post('/logout', function(req, res, next) {
 
 // get current user
 router.post('/getCurrentUser', function(req, res, next) {
+    console.log("req.session in get current user:",req.session);
   if(req.session.user_id){
     // find user in db
     // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0

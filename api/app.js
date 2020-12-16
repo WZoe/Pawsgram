@@ -17,7 +17,7 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
-app.use(cors());
+app.use(cors({credentials:true, origin: 'http://ec2-54-191-166-77.us-west-2.compute.amazonaws.com:3006', methods: ['GET', 'PUT', 'POST', 'OPTIONS']})); // enable CORS
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

@@ -24,6 +24,60 @@ let categories = {
     "Vet Visit":{"reason":"string","medication":"string"}
 };
 
+function checkLeapYear(year){
+    return (year%4==0 && year%100!=0) || (year%400==0);
+}
+
+let months = {1:31, 2:28, 3:31, 4:30, 5:31, 6:30, 7:31, 8:31, 9:30, 10:31, 11:30, 12:31};
+
+function getNextMonth(year, month, date){
+    let lastDay = false;
+    if(months[month] == date){ // last day of each month
+        lastDay = true;
+    }
+    let newMonth = month==12 ? 1 : (month+1);
+    let newDate = lastDay ? months[newMonth] : date;
+    let newYear = month==12 ? (year+1) : year;
+    return [newYear,newMonth,newDate];
+}
+
+function getMemorialEventDates(initial_date){
+    let arr = initial_date.split('/');
+    let ini_year = parseInt(arr[0]);
+    let ini_month = parseInt(arr[1]);
+    let ini_date = parseInt(arr[2]);
+    if(checkLeapYear(ini_year)){
+        months[2] = 29;
+    }
+    let memorial_dates = {};
+    let year, month, date;
+    // add anniversaries
+    month = ini_month;
+    date = ini_date;
+    for(let i=1;i<=10;i++){
+        year = ini_year+i;
+        if(month==2 && date==29){ // last year is a leap year
+            date = 28;
+        }
+        else if(checkLeapYear(year) && month==2 && date==28){ // this year is a leap year
+            date = 29;
+        }
+        memorial_dates[i+" Year"] = year+'/'+month+'/'+date;
+    }
+    // add monthly memorial events
+    year = ini_year;
+    month = ini_month;
+    date = ini_date;
+    for(let i=1;i<=6;i++){
+        let tmp = getNextMonth(year, month, date);
+        year = tmp[0];
+        month = tmp[1];
+        date = tmp[2];
+        memorial_dates[i+" Month"] = year+'/'+month+'/'+date;
+    }
+    return memorial_dates;
+}
+
 // create event
 router.post('/create', function(req, res, next) {
     let new_event = {
@@ -51,6 +105,11 @@ router.post('/create', function(req, res, next) {
         else{
             new_event[field] = req.body[field];
         }
+    }
+    // generate past memorial events
+    if(req.body.category=="Memorial"){
+        let memorial_dates = getMemorialEventDates(req.body.date);
+        memorial_dates.filter
     }
   // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
   MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {

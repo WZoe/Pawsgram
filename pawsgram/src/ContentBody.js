@@ -6,7 +6,6 @@ class ContentBody extends Component {
 
     render() {
         const {currentUser, page, timelineOwner} = this.props
-        // 后端传数据来的时候在today哪里加一个事件
         return (
             <div className="container" id="top">
 

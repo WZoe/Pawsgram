@@ -1,3 +1,7 @@
+// reference of react: https://www.taniarascia.com/getting-started-with-react/
+// reference of react: https://reactjs.org/docs/thinking-in-react.html
+// reference of bootstrap: https://getbootstrap.com/docs/4.0
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
@@ -192,6 +196,7 @@ class App extends React.Component {
         fd.append("file", ori_photo)
 
         // upload img using api
+        // uploading module cited from https://programmingwithmosh.com/javascript/react-file-upload-proper-server-side-nodejs-easy/
         fetch(upload, {
             body: fd,
             method:"POST",
@@ -387,6 +392,3 @@ class App extends React.Component {
 }
 
 ReactDOM.render(<App/>, document.getElementById('root'))
-// ReactDOM.render(<TimelinePage />, document.getElementById('root'))
-// ReactDOM.render(<NewButton />, document.getElementById('newButton'))
-// ReactDOM.render(<Nav />, document.getElementById('navbar'))

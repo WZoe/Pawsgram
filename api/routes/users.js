@@ -2,6 +2,7 @@
 let express = require('express');
 let router = express.Router();
 let app = express();
+let utils = require('../public/js/utils');
 
 // cite from: https://www.digitalocean.com/community/tutorials/use-expressjs-to-get-url-and-post-parameters
 let bodyParser = require('body-parser');
@@ -15,64 +16,65 @@ let MongoClient = require('mongodb').MongoClient;
 let ObjectID = require('mongodb').ObjectID;
 
 // sign up
-router.post('/signUp', function (req, res, next) {
-    // register user
-    // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
-    MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
-        if (connectionErr) {
-            res.send({success: false, msg: "DB connection failed."});
-            throw connectionErr;
-        }
-        let db = client.db('Pawsgram');
-        db.collection('users').insertOne(
-            {
-                username: req.body.username,
-                password: req.body.password
-            },
-            function (operationErr, user) {
-                if (operationErr) {
-                    res.send({success: false, msg: "DB insertion failed."});
-                    throw operationErr;
-                }
-                // set session
-                //req.session.user_id = user.insertedId;
-                res.send({success: true, msg: "Successfully registered.", current_user_id: user.insertedId});
-                client.close();
-            });
-    });
+router.post('/signUp', function(req, res, next) {
+  // register user
+  // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
+  MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
+    if(connectionErr){
+      res.send({success: false, msg: "DB connection failed."});
+      throw connectionErr;
+    }
+    let db = client.db('Pawsgram');
+    db.collection('users').insertOne(
+        {
+          username: req.body.username,
+          password: req.body.password
+        },
+        function(operationErr, user){
+          if(operationErr){
+            res.send({success: false, msg: "DB insertion failed."});
+            throw operationErr;
+          }
+          // set session
+          //req.session.user_id = user.insertedId;
+          res.send({success: true, msg: "Successfully registered.", current_user_id: user.insertedId});
+          client.close();
+        });
+  });
 });
 
 // login
-router.post('/login', function (req, res, next) {
-    console.log("username:", req.body.username, "\tpassword:", req.body.password)
-    // verify user login info
-    // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
-    MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
-        if (connectionErr) {
-            res.send({success: false, msg: "DB connection failed."});
-            throw connectionErr;
-        }
-        let db = client.db('Pawsgram');
-        db.collection('users').findOne(
-            {
-                username: req.body.username,
-                password: req.body.password
-            },
-            function (operationErr, user) {
-                if (operationErr) {
-                    res.send({success: false, msg: "DB find failed."});
-                    throw operationErr;
-                }
-                if (user) {
-                    // set session
-                    //req.session.user_id = user._id;
-                    res.send({success: true, msg: "Successfully logged in.", current_user_id: user._id});
-                } else {
-                    res.send({success: false, msg: "User does not exist, or password does not match!"});
-                }
-                client.close();
-            });
-    });
+router.post('/login', function(req, res, next) {
+  //console.log("username:",req.body.username,"\tpassword:",req.body.password)
+  // verify user login info
+  // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
+  MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
+    if(connectionErr){
+      res.send({success: false, msg: "DB connection failed."});
+      throw connectionErr;
+    }
+    let db = client.db('Pawsgram');
+    db.collection('users').findOne(
+        {
+          username: req.body.username,
+          password: req.body.password
+        },
+        function(operationErr, user){
+          if(operationErr){
+            res.send({success: false, msg: "DB find failed."});
+            throw operationErr;
+          }
+          if(user){
+            // set session
+            //req.session.user_id = user._id;
+            res.send({success: true, msg: "Successfully logged in.", current_user_id: user._id});
+          }
+          else{
+            res.send({success: false, msg: "User does not exist, or password does not match!"});
+          }
+          client.close();
+        });
+  });
 });
 
 // logout
@@ -82,73 +84,72 @@ router.post('/login', function (req, res, next) {
 // });
 
 // get current user
-router.post('/getCurrentUser', function (req, res, next) {
-    if (req.body.current_user_id) {
-        // find user in db
-        // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
-        MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
-            if (connectionErr) {
-                res.send({success: false, msg: "DB connection failed."});
-                throw connectionErr;
+router.post('/getCurrentUser', function(req, res, next) {
+  if(req.body.current_user_id){
+    // find user in db
+    // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
+    MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
+      if(connectionErr){
+        res.send({success: false, msg: "DB connection failed."});
+        throw connectionErr;
+      }
+      let db = client.db('Pawsgram');
+      db.collection('users').findOne(
+          {_id: new ObjectID(req.body.current_user_id)},
+          function(operationErr, user){
+            if(operationErr || user==null){
+              res.send({success: false, msg: "DB find failed."});
+              throw operationErr;
             }
-            let db = client.db('Pawsgram');
-            db.collection('users').findOne(
-                {_id: new ObjectID(req.body.current_user_id)},
-                function (operationErr, user) {
-                    if (operationErr) {
-                        res.send({success: false, msg: "DB find failed."});
-                        throw operationErr;
-                    }
-                    res.send({
-                        logged_in: true,
-                        user_id: req.body.current_user_id,
-                        username: user.username,
-                        pet_name: user.pet_name,
-                        avatar: user.avatar
-                    });
-                    client.close();
-                });
-        });
-    } else {
-        res.send({logged_in: false});
-    }
+            res.send({
+              logged_in: true,
+              user_id: req.body.current_user_id,
+              username:user.username,
+              pet_name:user.pet_name,
+              avatar:user.avatar
+            });
+            client.close();
+          });
+    });
+  }
+  else{
+    res.send({logged_in:false});
+  }
 });
 
 // change user info
-router.post('/changeInfo', function (req, res, next) {
-    if (req.body.current_user_id) {
+router.post('/changeInfo', function(req, res, next) {
+    if(req.body.current_user_id){
         // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
         MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
-            if (connectionErr) {
+            if(connectionErr){
                 res.send({success: false, msg: "DB connection failed."});
                 throw connectionErr;
             }
             let db = client.db('Pawsgram');
             db.collection('users').update(
                 {_id: new ObjectID(req.body.current_user_id)},
-                {
-                    $set: {
+                {$set: {
                         pet_name: req.body.pet_name,
                         avatar: req.body.avatar,
                         gender: req.body.gender,
                         breed: req.body.breed,
                         color: req.body.color,
                         birthday: req.body.birthday
-                    }
-                },
-                function (operationErr, user) {
-                    console.log("user:", user)
-                    if (operationErr) {
+                    }},
+                function(operationErr, user){
+                    //console.log("user:",user)
+                    if(operationErr){
                         res.send({success: false, msg: "DB update failed."});
                         throw operationErr;
                     }
                     // automatically generate birthday memorial event
                     let birthday_event = {
                         user_id: req.body.current_user_id,
-                        title: req.body.pet_name + "'s birthday",
+                        title: req.body.pet_name+"'s birthday",
                         category: "Memorial",
                         date: req.body.birthday,
-                        description: req.body.pet_name + " came to the world on " + req.body.birthday,
+                        description: req.body.pet_name+" came to the world on "+req.body.birthday,
                         likes: 0,
                         private: false,
                         photo: "",
@@ -156,20 +157,49 @@ router.post('/changeInfo', function (req, res, next) {
                     };
                     // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
                     MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
-                        if (connectionErr) {
+                        if(connectionErr){
                             res.send({success: false, msg: "DB connection failed."});
                             throw connectionErr;
                         }
                         let db = client.db('Pawsgram');
                         db.collection('events').insertOne(
                             birthday_event,
-                            function (operationErr, event) {
-                                if (operationErr) {
+                            function(operationErr, insertedEvent){
+                                if(operationErr){
                                     res.send({success: false, msg: "DB insertion failed."});
                                     throw operationErr;
                                 }
-                                res.send({success: true, msg: "Successfully changed info and created birthday event."});
-                                client.close();
+                                // generate memorial events
+                                let memorial_dates = utils.getMemorialEventDates(birthday_event.date);
+                                // filter out future generated events
+                                let memorial_events = [];
+                                for(let date_id in memorial_dates){
+                                    let memorial_date = memorial_dates[date_id];
+                                    let memorial_event = {
+                                        ref_id: insertedEvent.insertedId,
+                                        user_id: birthday_event.user_id,
+                                        title: birthday_event.title + memorial_date.name,
+                                        category: "Generated",
+                                        date: memorial_date.date,
+                                        description: birthday_event.description,
+                                        likes: 0,
+                                        private: JSON.parse(birthday_event.private),
+                                        photo: "",
+                                        location: birthday_event.location
+                                    }
+                                    memorial_events.push(memorial_event);
+                                }
+                                db.collection('events').insertMany(
+                                    memorial_events,
+                                    function(operationErr, event){
+                                        if(operationErr){
+                                            res.send({success: false, msg: "DB find failed."});
+                                            throw operationErr;
+                                        }
+                                        res.send({success: true, msg: "Successfully changed info and created birthday event for "+req.body.current_user_id});
+                                        client.close();
+                                    }
+                                );
                             });
                     });
                 });

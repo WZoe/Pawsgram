@@ -1,7 +1,7 @@
 $(document).ready(function (){
     // users
     $("#register").click(function (){
-        $.post("http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/users/signUp", { username: "Test", password: "test"},
+        $.post("http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/users/signUp", { username: "eimee", password: "eimee"},
             function(data, status){
                 console.log(data, status);
             });
@@ -10,6 +10,7 @@ $(document).ready(function (){
     $("#changeUserInfo").click(function (){
         $.post("http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/users/changeInfo",
             {
+                current_user_id: "5fd9be604596f93682045f63",
                 pet_name: "Brownie",
                 avatar: "photo2.png",
                 gender: "male",
@@ -42,7 +43,7 @@ $(document).ready(function (){
 
     $("#getCurrentUser").click(function (){
         $.post("http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/users/getCurrentUser",
-            {current_user_id: "5fd921e26502451c005840ed"},
+            {current_user_id: "5fd9be604596f93682045f63"},
             function(data, status){
                 console.log(data, status);
                 console.log(data.logged_in);
@@ -84,7 +85,7 @@ $(document).ready(function (){
             //     medication: "xxx medication"
             // },
             {
-                current_user_id: "5fd921e26502451c005840ed",
+                current_user_id: "5fd9be604596f93682045f63",
                 title: "adoption",
                 category: "Memorial",
                 date: "2020/02/29",
@@ -101,7 +102,7 @@ $(document).ready(function (){
     $("#timeline").click(function (){
         $.post("/events/timeline",
             // user_id: "5fd7c0501fb324782a89a9dd"
-            {current_user_id: "5fd921e26502451c005840ed"},
+            {current_user_id: "5fd9be604596f93682045f63"},
             function(data, status){
                 console.log(data, status);
             });
@@ -109,7 +110,7 @@ $(document).ready(function (){
 
     $("#foryou").click(function (){
         $.post("/events/forYou",
-            {current_user_id: "5fd921e26502451c005840ed"},
+            // {current_user_id: "5fd9be604596f93682045f63"},
             function(data, status){
                 console.log(data, status);
             });

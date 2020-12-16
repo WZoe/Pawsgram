@@ -86,6 +86,7 @@ router.post('/login', function(req, res, next) {
 router.post('/getCurrentUser', function(req, res, next) {
     console.log("get current user:",req.body.current_user_id)
   if(req.body.current_user_id){
+      console.log("enter 89")
     // find user in db
     // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
     MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
@@ -93,14 +94,16 @@ router.post('/getCurrentUser', function(req, res, next) {
         res.send({success: false, msg: "DB connection failed."});
         throw connectionErr;
       }
+      console.log("enter 97")
       let db = client.db('Pawsgram');
       db.collection('users').findOne(
-          {_id: new ObjectID(req.body.current_user_id)},-
+          {_id: new ObjectID(req.body.current_user_id)},
           function(operationErr, user){
             if(operationErr){
               res.send({success: false, msg: "DB find failed."});
               throw operationErr;
             }
+            console.log("enter 106")
             res.send({
               logged_in: true,
               user_id: req.body.current_user_id,

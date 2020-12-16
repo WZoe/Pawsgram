@@ -33,15 +33,16 @@ $(document).ready(function (){
             });
     });
 
-    $("#logout").click(function (){
-        $.post("http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/users/logout",
-            function(data, status){
-                console.log(data, status);
-            });
-    });
+    // $("#logout").click(function (){
+    //     $.post("http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/users/logout",
+    //         function(data, status){
+    //             console.log(data, status);
+    //         });
+    // });
 
     $("#getCurrentUser").click(function (){
         $.post("http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/users/getCurrentUser",
+            {current_user_id: "5fd921e26502451c005840ed"},
             function(data, status){
                 console.log(data, status);
                 console.log(data.logged_in);
@@ -83,6 +84,7 @@ $(document).ready(function (){
             //     medication: "xxx medication"
             // },
             {
+                current_user_id: "5fd921e26502451c005840ed",
                 title: "adoption",
                 category: "Memorial",
                 date: "2020/02/29",
@@ -98,7 +100,8 @@ $(document).ready(function (){
 
     $("#timeline").click(function (){
         $.post("/events/timeline",
-            {user_id: "5fd7c0501fb324782a89a9dd"},
+            // user_id: "5fd7c0501fb324782a89a9dd"
+            {current_user_id: "5fd921e26502451c005840ed"},
             function(data, status){
                 console.log(data, status);
             });

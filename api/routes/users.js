@@ -2,6 +2,7 @@
 let express = require('express');
 let router = express.Router();
 let app = express();
+let utils = require('../public/js/utils');
 
 // cite from: https://www.digitalocean.com/community/tutorials/use-expressjs-to-get-url-and-post-parameters
 let bodyParser = require('body-parser');
@@ -44,7 +45,7 @@ router.post('/signUp', function(req, res, next) {
 
 // login
 router.post('/login', function(req, res, next) {
-  console.log("username:",req.body.username,"\tpassword:",req.body.password)
+  //console.log("username:",req.body.username,"\tpassword:",req.body.password)
   // verify user login info
   // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
   MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
@@ -96,7 +97,7 @@ router.post('/getCurrentUser', function(req, res, next) {
       db.collection('users').findOne(
           {_id: new ObjectID(req.body.current_user_id)},
           function(operationErr, user){
-            if(operationErr){
+            if(operationErr || user==null){
               res.send({success: false, msg: "DB find failed."});
               throw operationErr;
             }
@@ -137,7 +138,7 @@ router.post('/changeInfo', function(req, res, next) {
                         birthday: req.body.birthday
                     }},
                 function(operationErr, user){
-                    console.log("user:",user)
+                    //console.log("user:",user)
                     if(operationErr){
                         res.send({success: false, msg: "DB update failed."});
                         throw operationErr;
@@ -163,13 +164,42 @@ router.post('/changeInfo', function(req, res, next) {
                         let db = client.db('Pawsgram');
                         db.collection('events').insertOne(
                             birthday_event,
-                            function(operationErr, event){
+                            function(operationErr, insertedEvent){
                                 if(operationErr){
                                     res.send({success: false, msg: "DB insertion failed."});
                                     throw operationErr;
                                 }
-                                res.send({success: true, msg: "Successfully changed info and created birthday event."});
-                                client.close();
+                                // generate memorial events
+                                let memorial_dates = utils.getMemorialEventDates(birthday_event.date);
+                                // filter out future generated events
+                                let memorial_events = [];
+                                for(let date_id in memorial_dates){
+                                    let memorial_date = memorial_dates[date_id];
+                                    let memorial_event = {
+                                        ref_id: insertedEvent.insertedId,
+                                        user_id: birthday_event.user_id,
+                                        title: birthday_event.title + memorial_date.name,
+                                        category: "Generated",
+                                        date: memorial_date.date,
+                                        description: birthday_event.description,
+                                        likes: 0,
+                                        private: JSON.parse(birthday_event.private),
+                                        photo: "",
+                                        location: birthday_event.location
+                                    }
+                                    memorial_events.push(memorial_event);
+                                }
+                                db.collection('events').insertMany(
+                                    memorial_events,
+                                    function(operationErr, event){
+                                        if(operationErr){
+                                            res.send({success: false, msg: "DB find failed."});
+                                            throw operationErr;
+                                        }
+                                        res.send({success: true, msg: "Successfully changed info and created birthday event for "+req.body.current_user_id});
+                                        client.close();
+                                    }
+                                );
                             });
                     });
                 });

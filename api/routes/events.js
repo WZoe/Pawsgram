@@ -2,6 +2,8 @@
 let express = require('express');
 let router = express.Router();
 let app = express();
+let utils = require('../public/js/utils');
+let multer = require('multer');
 
 // cite from: https://www.digitalocean.com/community/tutorials/use-expressjs-to-get-url-and-post-parameters
 let bodyParser = require('body-parser');
@@ -14,92 +16,37 @@ app.use(bodyParser.urlencoded({extended: true}));
 let MongoClient = require('mongodb').MongoClient;
 let ObjectID = require('mongodb').ObjectID;
 
-// special fields for categories
-let categories = {
-    "General": {},
-    "Activity":{},
-    "Memorial":{},
-    "Weight Tracking":{"weight":"float"},
-    "Vaccination":{"vac_name":"string"},
-    "Vet Visit":{"reason":"string","medication":"string"}
-};
+// upload images
+let filenames;
+// cited from: https://programmingwithmosh.com/javascript/react-file-upload-proper-server-side-nodejs-easy/
+let storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public')
+    },
+    filename: function (req, file, cb) {
+        let filename = Date.now() + '-' +file.originalname;
+        cb(null, filename)
+        filenames.push(filename)
+    }
+})
+var uploadArray = multer({ storage: storage }).array('file');
+let uploadSingle = multer({ storage: storage }).single('file');
 
-function compareDates(day1, day2){
-    let arr1 = day1.split('/');
-    let year1 = parseInt(arr1[0]);
-    let month1 = parseInt(arr1[1]);
-    let date1 = parseInt(arr1[2]);
-    let arr2 = day2.split('/');
-    let year2 = parseInt(arr2[0]);
-    let month2 = parseInt(arr2[1]);
-    let date2 = parseInt(arr2[2]);
-    if(year1==year2 && month1==month2 && date1==date2){
-        return 0;
-    }
-    else if(year1 != year2){
-        return year1-year2;
-    }
-    else if(month1 != month2){
-        return month1-month2;
-    }
-    else{
-        return date1-date2;
-    }
-}
-
-function checkLeapYear(year){
-    return (year%4==0 && year%100!=0) || (year%400==0);
-}
-
-let months = {1:31, 2:28, 3:31, 4:30, 5:31, 6:30, 7:31, 8:31, 9:30, 10:31, 11:30, 12:31};
-
-function getNextMonth(year, month, date){
-    let lastDay = false;
-    if(months[month] == date){ // last day of each month
-        lastDay = true;
-    }
-    let newMonth = month==12 ? 1 : (month+1);
-    let newDate = lastDay ? months[newMonth] : date;
-    let newYear = month==12 ? (year+1) : year;
-    return [newYear,newMonth,newDate];
-}
-
-function getMemorialEventDates(initial_date){
-    let arr = initial_date.split('/');
-    let ini_year = parseInt(arr[0]);
-    let ini_month = parseInt(arr[1]);
-    let ini_date = parseInt(arr[2]);
-    if(checkLeapYear(ini_year)){
-        months[2] = 29;
-    }
-    let memorial_dates = [];
-    let year, month, date;
-    // add anniversaries
-    month = ini_month;
-    date = ini_date;
-    for(let i=1;i<=10;i++){
-        year = ini_year+i;
-        if(month==2 && date==29){ // last year is a leap year
-            date = 28;
+router.post('/upload', function(req, res, next) {
+    filenames = [];
+    uploadArray(req, res, function (err) {
+        if (err instanceof multer.MulterError) {
+            return res.status(500).json(err);
+        } else if (err) {
+            return res.status(500).json(err);
         }
-        else if(checkLeapYear(year) && month==2 && date==28){ // this year is a leap year
-            date = 29;
-        }
-        memorial_dates.push({"name":" -- "+i+" Year Memorial","date":year+'/'+month+'/'+date});
-    }
-    // add monthly memorial events
-    year = ini_year;
-    month = ini_month;
-    date = ini_date;
-    for(let i=1;i<=6;i++){
-        let tmp = getNextMonth(year, month, date);
-        year = tmp[0];
-        month = tmp[1];
-        date = tmp[2];
-        memorial_dates.push({"name":" -- "+i+" Month Memorial","date":year+'/'+month+'/'+date});
-    }
-    return memorial_dates;
-}
+        //return res.status(200).send(req.file);
+        console.log("filenames:",filenames)
+        res.send({status:200, success:true, filenames:filenames});
+    })
+});
+// citation ends
+
 
 // create event
 router.post('/create', function(req, res, next) {
@@ -116,14 +63,14 @@ router.post('/create', function(req, res, next) {
             location: req.body.location
         };
         // add special fields
-        for(let field in categories[req.body.category]){
-            if(categories[req.body.category][field] == "float"){
+        for(let field in utils.categories[req.body.category]){
+            if(utils.categories[req.body.category][field] == "float"){
                 new_event[field] = parseFloat(req.body[field]);
             }
-            else if(categories[req.body.category][field] == "int"){
+            else if(utils.categories[req.body.category][field] == "int"){
                 new_event[field] = parseInt(req.body[field]);
             }
-            else if(categories[req.body.category][field] == "bool"){
+            else if(utils.categories[req.body.category][field] == "bool"){
                 new_event[field] = JSON.parse(req.body[field]);
             }
             else{
@@ -146,16 +93,13 @@ router.post('/create', function(req, res, next) {
                     }
                     // insert automatically generated events for memorial events
                     if(new_event.category == 'Memorial'){
-                        // generate past memorial events
-                        let memorial_dates = getMemorialEventDates(new_event.date);
+                        // generate memorial events
+                        let memorial_dates = utils.getMemorialEventDates(new_event.date);
                         // get today's date
-                        let today = new Date();
-                        let todayStr = today.getFullYear()+'/'+(today.getMonth()+1)+'/'+today.getDate();
-                        for(let i in memorial_dates){
-                            let day = memorial_dates[i];
-                        }
+                        // let today = new Date();
+                        // let todayStr = today.getFullYear()+'/'+(today.getMonth()+1)+'/'+today.getDate();
                         // filter out future generated events
-                        //memorial_dates = memorial_dates.filter(day => compareDates(day.date, todayStr) <= 0);
+                        //memorial_dates = memorial_dates.filter(day => utils.compareDates(day.date, todayStr) <= 0);
                         let memorial_events = [];
                         for(let date_id in memorial_dates){
                             let memorial_date = memorial_dates[date_id];
@@ -197,11 +141,15 @@ router.post('/create', function(req, res, next) {
 router.post('/timeline', function(req, res, next) {
     let user_id;
     if(req.body.user_id){
+        //console.log("req.body.user_id",req.body.user_id)
         user_id = req.body.user_id;
     }
     else{
+        //console.log("req.body.current_user_id",req.body.current_user_id)
         user_id = req.body.current_user_id;
     }
+    //console.log("user_id:",user_id);
+    //console.log("typeof user_id:",typeof(user_id))
     // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
     MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
         if(connectionErr){
@@ -210,7 +158,7 @@ router.post('/timeline', function(req, res, next) {
         }
         let db = client.db('Pawsgram');
         db.collection('events').find({user_id: user_id})
-            .sort({date: -1})
+            //.sort({date: -1})
             .toArray(
                 function(operationErr, events){
                     if(operationErr){
@@ -224,11 +172,13 @@ router.post('/timeline', function(req, res, next) {
                     // get today's date
                     let today = new Date();
                     let todayStr = today.getFullYear()+'/'+(today.getMonth()+1)+'/'+today.getDate();
-                    // detect if future events
+                    // sort
+                    events.sort(function(a,b){return utils.compareDates(b.date, a.date)});
                     // get insert id for today event
-                    let insert_id = binarySearch(events, todayStr);
+                    let insert_id = utils.binarySearch(events, todayStr);
+                    // detect if future events
                     for(let event_id=0; event_id<events.length;event_id++){
-                        //if(compareDates(events[event_id].date, todayStr) > 0){
+                        //if(utils.compareDates(events[event_id].date, todayStr) > 0){
                         if(event_id < insert_id){
                             events[event_id].future = true;
                         }
@@ -257,7 +207,7 @@ router.post('/timeline', function(req, res, next) {
                         let generated_event_arr = generated_future_events[ref_id];
                         result_events.push(generated_event_arr[generated_event_arr.length-1]);
                     }
-                    result_events.sort(function(a,b){return compareDates(b.date, a.date)});
+                    result_events.sort(function(a,b){return utils.compareDates(b.date, a.date)});
                     db.collection('users').findOne(
                         {_id: new ObjectID(user_id)},
                         {projection: {password: 0}},
@@ -266,6 +216,7 @@ router.post('/timeline', function(req, res, next) {
                             res.send({success: false, msg: "DB find failed."});
                             throw operationErr2;
                         }
+                        //console.log("user:",user);
                         res.send({data: result_events, user: user, success: true, msg: "Successfully load timeline for user."});
                     });
                     client.close();
@@ -293,27 +244,30 @@ router.post('/forYou', function(req, res, next) {
                         res.send({success: false, msg: "DB find failed."});
                         throw operationErr;
                     }
-                    console.log("for you users:",users)
+                    //console.log("users:",users);
                     for(let i=0; i<users.length; i++){
                         let user = users[i];
                         data.push({"user":user});
                         db.collection('events').find({user_id: user._id.toString()}) // user._id is ObjectID object, need to convert to string
-                            .sort({date: -1})
+                            // .sort({date: -1})
                             .toArray(function(operationErr2, events){
                                 if(operationErr2){
                                     res.send({success: false, msg: "DB find failed."});
                                     throw operationErr2;
                                 }
                                 // filter out private events for non-self users
-                                if(user._id.toString() != req.body.current_user_id) {
+                                if(!('current_user_id' in req.body) || user._id.toString() != req.body.current_user_id) {
                                     events = events.filter(event => event.private == false);
                                 }
                                 // get today's date
                                 let today = new Date();
                                 let todayStr = today.getFullYear()+'/'+(today.getMonth()+1)+'/'+today.getDate();
+                                // sort
+                                events.sort(function(a,b){return utils.compareDates(b.date,  a.date)});
                                 // get the latest event before tomorrow
-                                let latest_id = binarySearch(events, todayStr);
+                                let latest_id = utils.binarySearch(events, todayStr);
                                 // exclude all future events / no events
+                                //console.log("data:",data,"\ti:",i,"\tlatest_id:",latest_id);
                                 if(latest_id < events.length){
                                     data[i].event = events[latest_id];
                                 }
@@ -322,7 +276,7 @@ router.post('/forYou', function(req, res, next) {
                                     // do not display users with no past events
                                     data = data.filter(d => d.hasOwnProperty('event'));
                                     // order data by event date
-                                    data.sort(function(a,b){return b.event.date - a.event.date});
+                                    data.sort(function(a,b){return utils.compareDates(b.event.date,  a.event.date)});
                                     res.send({data: data, success: true, msg: "Successfully load for you page."});
                                 }
                             });
@@ -355,28 +309,4 @@ router.post('/like', function(req, res, next) {
     });
 });
 
-function binarySearch(array, today){
-    //console.log("events:",array);
-    let l = 0, h = array.length-1;
-    let mid;
-    let res = -1;
-    while(h < array.length && l <= h){
-        mid = parseInt((l+h+1)/2);
-        //console.log("low:",l,"\tmid:",mid,"\thigh:",h);
-        if(compareDates(array[mid].date, today) > 0){
-            res = mid;
-            l = mid+1;
-        }
-        else{
-            h = mid-1;
-        }
-    }
-    res = res == -1 ? 0 : res+1;
-    //console.log("res:",res);
-    return res;
-}
-
 module.exports = router;
-
-// TODO: for you not working when user not logged in
-// TODO: 服务器上传图片

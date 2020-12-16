@@ -22,6 +22,17 @@ class SignUp extends Component {
         })
     }
 
+    handleUpload = (event) => {
+        const file = event.target.files[0]
+
+        this.setState(
+            {
+                avatar: file
+            }
+        )
+    }
+
+
     componentDidMount() {
         let newDate = new Date()
         let date = newDate.getDate();
@@ -106,7 +117,8 @@ class SignUp extends Component {
                             </div>
                             <div className="form-group">
                                 <label>Profile Photo</label>
-                                <input className="form-control" type="text" id="avatar" name="avatar"/>
+                                {/*cited from https://getbootstrap.com/docs/4.0/components/forms/#file-browser*/}
+                                <input className="form-control" type="file" name="avatar" onChange={this.handleUpload}/>
                             </div>
                         </div>
                         <div className="modal-footer">

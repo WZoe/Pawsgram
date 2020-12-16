@@ -24,7 +24,7 @@ class Nav extends Component {
                     <div className="p-2 d-flex justify-content-around align-items-center">
                         <button className="btn ml-5" onClick={() => {
                             this.props.setTimelineOwner(this.props.currentUser.user_id, true);
-                        }}><img src={process.env.PUBLIC_URL + '/img/' + currentUser.avatar}
+                        }}><img src={"http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/" + currentUser.avatar}
                                 width="50" height="50"
                                 className="d-inline-block align-top rounded-circle"
                                 alt=""/><span

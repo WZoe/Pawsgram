@@ -97,34 +97,65 @@ class TimelinePage extends Component {
     //     // ],
     // }
 
+
     newPost = (info) => {
         const endpoint = "http://ec2-18-206-208-42.compute-1.amazonaws.com:3000"
         const api = "/events/create"
         const url = endpoint + api
+        const upload = endpoint+'/events/upload'
 
         info['date'] = info.year + '/' + info.month + '/' + info.date
         info["current_user_id"] = localStorage.getItem("current_user_id")
 
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(info)
+        //process photo
+        let ori_photo = info.photo
+        let fd = new FormData()
+        ori_photo.forEach((cur)=>{
+            fd.append("file", cur)
+        })
+
+        //upload photos-
+        // upload img using api
+        fetch(upload, {
+            body: fd,
+            method:"POST",
         })
             .then((result) => result.json())
             .then((result) => {
-                this.props.updateError(result)
-                if (result.success) {
-                    //success, update timeline
-                    this.props.setTimelineOwner(localStorage.getItem("current_user_id"), true)
-                    return result
-                } else {
-                    //failed, return {success:false, msg:}
-                    return result
+                    // this.updateError(result)
+                console.log(result)
+                    if (result.success) {
+                        //success,
+                        console.log(result)
+
+                        info.photo = result.filenames
+
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(info)
+                        })
+                            .then((result) => result.json())
+                            .then((result) => {
+                                this.props.updateError(result)
+                                if (result.success) {
+                                    //success, update timeline
+                                    this.props.setTimelineOwner(localStorage.getItem("current_user_id"), true)
+                                    return result
+                                } else {
+                                    //failed, return {success:false, msg:}
+                                    return result
+                                }
+                            })
+
+                    }
                 }
-            })
+            )
+
+
     }
 
     componentDidMount() {
@@ -156,6 +187,16 @@ class TimelinePage extends Component {
                 }
 
                 const cat = entry.category === "Generated" ? "Memorial" : entry.category
+                const photos = (entry.photo!=='' && entry.photo!==[] &&
+                    entry.photo.map((url, index) => {
+                        return(
+                            <div className="photo m-1 rounded"><img className="rounded"
+                                                                    src={"http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/" + url}
+                                                                    alt=""/></div>
+                        )
+                    })
+                )
+
 
                 return (
                     <li className="post row" id={entry._id} key={index}>
@@ -165,7 +206,7 @@ class TimelinePage extends Component {
                             <h3 className="likes"><i className="fas fa-heart mr-2"></i><i
                                 className="fas fa-times"> {entry.likes}</i></h3>
                             {localStorage.getItem("current_user_id") !== timelineOwner.user_id &&
-                            <Like event_id={entry._id} index={index} likePlus={this.props.likePlus}/>
+                            <Like event_id={entry._id} page={"Timeline"} index={index} likePlus={this.props.likePlus}/>
                             }
                         </div>
                         <div className={eventCSS}>
@@ -181,20 +222,9 @@ class TimelinePage extends Component {
                             <p><span className="tagName rounded mr-2">Medication</span>{entry.medication}</p>}
                             {entry.description && <p>{entry.description}</p>}
                             {/*photos*/}
-                            {entry.photo &&
+                            {(entry.photo!=='' && entry.photo!==[]) &&
                             <div className="photos">
-                                <div className="photo m-1 rounded"><img className="rounded"
-                                                                        src={process.env.PUBLIC_URL + '/img/' + entry.photo[0]}
-                                                                        alt=""/></div>
-                                <div className="photo m-1 rounded"><img className="rounded"
-                                                                        src={process.env.PUBLIC_URL + '/img/' + entry.photo[1]}
-                                                                        alt=""/></div>
-                                <div className="photo m-1 rounded"><img className="rounded"
-                                                                        src={process.env.PUBLIC_URL + '/img/' + entry.photo[2]}
-                                                                        alt=""/></div>
-                                <div className="photo m-1 rounded"><img className="rounded"
-                                                                        src={process.env.PUBLIC_URL + '/img/' + entry.photo[2]}
-                                                                        alt=""/></div>
+                                {photos}
                             </div>
                             }
                         </div>
@@ -220,7 +250,7 @@ class TimelinePage extends Component {
                 {/*Pet info*/}
                 <div className="row">
                     <div className="col-3 postTimeline">
-                        <img src={process.env.PUBLIC_URL + user.avatar} width="200" height="200"
+                        <img src={"http://ec2-18-206-208-42.compute-1.amazonaws.com:3000/" + user.avatar} width="200" height="200"
                              className="d-inline-block align-top rounded-circle" alt=""/>
 
                     </div>

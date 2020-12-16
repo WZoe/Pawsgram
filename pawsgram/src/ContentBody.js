@@ -26,7 +26,7 @@ class ContentBody extends Component {
                               timelineOwner={timelineOwner} page={page} setTimelineOwner={this.props.setTimelineOwner}/>
                 }
                 {page === "Discover" &&
-                <DiscoverPage currentUser={currentUser} timelineOwner={timelineOwner} page={page}
+                <DiscoverPage likePlus={this.props.likePlus} fetchDiscover={this.props.fetchDiscover} forYou={this.props.forYou} currentUser={currentUser} timelineOwner={timelineOwner} page={page}
                               switchToTimeline={this.props.switchToTimeline}
                               setTimelineOwner={this.props.setTimelineOwner}/>}
             </div>

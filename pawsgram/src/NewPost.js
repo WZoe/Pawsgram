@@ -2,12 +2,13 @@ import React, {Component} from 'react'
 
 class NewPost extends Component {
     state = {
+        temp:'',
         title: '',
         category: 'General',
         date: '1',
         description: '',
         private: '',
-        photo: '',
+        photo: [],
         location: '',
         year: '2020',
         month: '1',
@@ -23,6 +24,15 @@ class NewPost extends Component {
         this.setState({
             [name]: value,
         })
+    }
+    handleUpload = (event) => {
+        const file = event.target.files[0]
+
+        this.setState(
+            {
+                temp: file
+            }
+        )
     }
 
     componentDidMount() {
@@ -40,6 +50,13 @@ class NewPost extends Component {
 
     render() {
         const {currentUser, page, timelineOwner} = this.props
+        const thumbnails = this.state.photo.map((photo, index) => {
+            return (
+                // <div className="thumbnail  m-1 rounded">
+                <p>{photo.name}</p>
+        // </div>
+            )
+        })
 
         return (
             <div className="modal fade" id="newPost" tabIndex="-1" role="dialog"
@@ -138,7 +155,25 @@ class NewPost extends Component {
                             }
                             <div className="form-group">
                                 <label>Photos</label>
-                                <input className="form-control" type="text" name="photo"/>
+                                <div className="input-group">
+                                <input className="form-control" type="file" name="temp" onChange={this.handleUpload}/>
+                                <div className="input-group-append">
+                                    <button className="btn btn-outline-secondary" onClick={()=>{
+                                        if (this.state.temp) {
+                                            let newphoto = this.state.photo
+                                            newphoto.push(this.state.temp)
+                                            // console.log(newphoto)
+                                            this.setState({
+                                                photo:newphoto,
+                                                temp:''
+                                            })
+                                        }
+                                    }} type="button">Add</button>
+                                </div>
+                                </div>
+                                <div className="m-2">
+                                    {thumbnails}
+                                </div>
                             </div>
                             <div className="form-group">
                                 <label>Description</label>

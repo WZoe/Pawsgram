@@ -23,6 +23,9 @@ class App extends React.Component {
         posts: {
             user: {},
             data: []
+        },
+        forYou: {
+            data:[]
         }
     }
 
@@ -61,7 +64,7 @@ class App extends React.Component {
         const api = "/users/getCurrentUser"
         const url = endpoint + api
 
-        console.log(localStorage.getItem("current_user_id"))
+        // console.log(localStorage.getItem("current_user_id"))
         if (localStorage.getItem("current_user_id") !== null) {
             fetch(url, {
                 headers: {
@@ -77,13 +80,14 @@ class App extends React.Component {
                 .then((result) => result.json())
                 .then((result) => {
                     // this.updateError(result)
-                    console.log(result)
+                    // console.log(result)
                     this.setState({
                         currentUser: result,
                     })
-                    if (!this.state.timelineOwner) {
-                        this.setTimelineOwner(localStorage.getItem("current_user_id"))
-                    }
+
+                    this.setTimelineOwner(localStorage.getItem("current_user_id"),true)
+                    this.fetchDiscover()
+
                     return result
                 })
         } else {
@@ -92,8 +96,6 @@ class App extends React.Component {
             })
             console.log("not logged in")
         }
-
-
     }
 
     setTimelineOwner = (userID, change) => {
@@ -110,6 +112,10 @@ class App extends React.Component {
         localStorage.removeItem("current_user_id")
         this.setState({
             currentUser: {logged_in: false},
+        })
+        this.fetchTimeline(this.state.timelineOwner.user_id, false)
+        this.fetchDiscover()
+        this.setState({
             page: "Discover"
         })
         //
@@ -164,7 +170,7 @@ class App extends React.Component {
             .then((result) => result.json())
             .then((result) => {
                 this.updateError(result)
-                console.log(result)
+                // console.log(result)
                 if (result.success) {
                     //success, fetch current user
                     localStorage.setItem("current_user_id", result.current_user_id)
@@ -177,30 +183,60 @@ class App extends React.Component {
         const endpoint = "http://ec2-18-206-208-42.compute-1.amazonaws.com:3000"
         const api = "/users/signUp"
         const url = endpoint + api
+        const upload = endpoint+'/events/upload'
 
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-                username: info.username,
-                password: info.password
-            })
+        //process photo
+        let ori_photo = info.avatar
+        // console.log(ori_photo)
+        const fd = new FormData()
+        fd.append("file", ori_photo)
+
+        // upload img using api
+        fetch(upload, {
+            body: fd,
+            method:"POST",
         })
             .then((result) => result.json())
             .then((result) => {
                     this.updateError(result)
                     if (result.success) {
-                        //success, update info and fetch current user
-                        console.log(result)
-                        localStorage.setItem("current_user_id", result.current_user_id)
-                        this.userChangeInfo(info)
+                        //success,
+                        const filename=result.filenames[0]
+                        info.avatar = filename
+                        if (filename == null) {
+                            info.avatar="avatar.png"
+                        }
+                        // console.log(result)
+
+                        //sign up
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                                username: info.username,
+                                password: info.password
+                            })
+                        })
+                            .then((result) => result.json())
+                            .then((result) => {
+                                    this.updateError(result)
+                                    if (result.success) {
+                                        //success, update info and fetch current user
+                                        // console.log(result)
+                                        localStorage.setItem("current_user_id", result.current_user_id)
+                                        this.userChangeInfo(info)
+                                    }
+                                }
+                            )
                     }
                 }
             )
+
+
     }
 
     userChangeInfo = (info) => {
@@ -255,7 +291,7 @@ class App extends React.Component {
                 this.updateError(result)
                 if (result.success) {
                     //success, update timeline
-                    console.log(result)
+                    // console.log(result)
                     this.setState({
                         posts: {
                             user: result.user,
@@ -273,18 +309,60 @@ class App extends React.Component {
             })
     }
 
-    likePlus = (index) => {
-        let newData = this.state.posts.data
-        newData[index].likes += 1
-        this.setState({
-            posts: {
-                data: newData
-            }
+    likePlus = (index, page) => {
+        if (page==="Timeline") {
+            let newPosts = this.state.posts
+            newPosts.data[index].likes += 1
+            this.setState({
+                posts: newPosts
+            })
+        } else {
+            let newData = this.state.forYou.data
+            newData[index].event.likes += 1
+            this.setState({
+                forYou:{
+                    data: newData
+                }
+            })
+        }
+    }
+
+    fetchDiscover = () => {
+        const endpoint = "http://ec2-18-206-208-42.compute-1.amazonaws.com:3000"
+        const api = "/events/forYou"
+        const url = endpoint + api
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                current_user_id: localStorage.getItem("current_user_id"),
+            })
         })
+            .then((result) => result.json())
+            .then((result) => {
+                if (result.success) {
+                    //success, update timeline
+                    console.log(result.data)
+                    this.setState({
+                        forYou:{
+                            data: result.data
+                        }
+                    })
+                    return result
+                } else {
+                    //failed, return {success:false, msg:}
+                    return result
+                }
+            })
     }
 
     componentDidMount() {
         //fetch currentUser
+        // localStorage.clear()
         this.getCurrentUser()
         // this.setTimelineOwner(this.state.currentUser.user_id)
     }
@@ -294,7 +372,7 @@ class App extends React.Component {
 
         return (
             <div>
-                <ContentBody likePlus={this.likePlus} fetchTimeline={this.fetchTimeline} posts={this.state.posts}
+                <ContentBody forYou={this.state.forYou} likePlus={this.likePlus} fetchTimeline={this.fetchTimeline} fetchDiscover={this.fetchDiscover} posts={this.state.posts}
                              currentUser={currentUser} page={page} timelineOwner={timelineOwner} error={error}
                              updateError={this.updateError} setTimelineOwner={this.setTimelineOwner}
                              switchToTimeline={this.switchToTimeline}/>

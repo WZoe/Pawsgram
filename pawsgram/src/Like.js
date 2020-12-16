@@ -16,11 +16,11 @@ class Like extends Component {
         })
             .then((result) => result.json())
             .then((result) => {
+                console.log("liking event"+this.props.event_id+this.props.index+this.props.page)
                 console.log(result)
-                console.log(this.props.event_id)
                 if (result.success) {
                     //success
-                    this.props.likePlus(this.props.index)
+                    this.props.likePlus(this.props.index, this.props.page)
                     return result
                 } else {
                     //failed, return {success:false, msg:}

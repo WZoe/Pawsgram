@@ -24,6 +24,29 @@ let categories = {
     "Vet Visit":{"reason":"string","medication":"string"}
 };
 
+function compareDates(day1, day2){
+    let arr1 = day1.split('/');
+    let year1 = parseInt(arr1[0]);
+    let month1 = parseInt(arr1[1]);
+    let date1 = parseInt(arr1[2]);
+    let arr2 = day2.split('/');
+    let year2 = parseInt(arr2[0]);
+    let month2 = parseInt(arr2[1]);
+    let date2 = parseInt(arr2[2]);
+    if(year1==year2 && month1==month2 && date1==date2){
+        return 0;
+    }
+    else if(year1 != year2){
+        return year1-year2;
+    }
+    else if(month1 != month2){
+        return month1-month2;
+    }
+    else{
+        return date1-date2;
+    }
+}
+
 function checkLeapYear(year){
     return (year%4==0 && year%100!=0) || (year%400==0);
 }
@@ -49,7 +72,7 @@ function getMemorialEventDates(initial_date){
     if(checkLeapYear(ini_year)){
         months[2] = 29;
     }
-    let memorial_dates = {};
+    let memorial_dates = [];
     let year, month, date;
     // add anniversaries
     month = ini_month;
@@ -62,7 +85,7 @@ function getMemorialEventDates(initial_date){
         else if(checkLeapYear(year) && month==2 && date==28){ // this year is a leap year
             date = 29;
         }
-        memorial_dates[i+" Year"] = year+'/'+month+'/'+date;
+        memorial_dates.push({"name":" -- "+i+" Year Memorial","date":year+'/'+month+'/'+date});
     }
     // add monthly memorial events
     year = ini_year;
@@ -73,7 +96,7 @@ function getMemorialEventDates(initial_date){
         year = tmp[0];
         month = tmp[1];
         date = tmp[2];
-        memorial_dates[i+" Month"] = year+'/'+month+'/'+date;
+        memorial_dates.push({"name":" -- "+i+" Month Memorial","date":year+'/'+month+'/'+date});
     }
     return memorial_dates;
 }
@@ -107,11 +130,6 @@ router.post('/create', function(req, res, next) {
                 new_event[field] = req.body[field];
             }
         }
-        // generate past memorial events
-        if(req.body.category=="Memorial"){
-            let memorial_dates = getMemorialEventDates(req.body.date);
-            memorial_dates.filter
-        }
         // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
         MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
             if(connectionErr){
@@ -121,13 +139,55 @@ router.post('/create', function(req, res, next) {
             let db = client.db('Pawsgram');
             db.collection('events').insertOne(
                 new_event,
-                function(operationErr, event){
+                function(operationErr, insertedEvent){
                     if(operationErr){
                         res.send({success: false, msg: "DB insertion failed."});
                         throw operationErr;
                     }
-                    res.send({success: true, msg: "Successfully created event."});
-                    client.close();
+                    // insert automatically generated events for memorial events
+                    if(new_event.category == 'Memorial'){
+                        // generate past memorial events
+                        let memorial_dates = getMemorialEventDates(new_event.date);
+                        // get today's date
+                        let today = new Date();
+                        let todayStr = today.getFullYear()+'/'+(today.getMonth()+1)+'/'+today.getDate();
+                        for(let i in memorial_dates){
+                            let day = memorial_dates[i];
+                        }
+                        // filter out future generated events
+                        //memorial_dates = memorial_dates.filter(day => compareDates(day.date, todayStr) <= 0);
+                        let memorial_events = [];
+                        for(let date_id in memorial_dates){
+                            let memorial_date = memorial_dates[date_id];
+                            let memorial_event = {
+                                ref_id: insertedEvent.insertedId,
+                                user_id: new_event.user_id,
+                                title: new_event.title + memorial_date.name,
+                                category: "Generated",
+                                date: memorial_date.date,
+                                description: new_event.description,
+                                likes: 0,
+                                private: JSON.parse(new_event.private),
+                                photo: new_event.photo,
+                                location: new_event.location
+                            }
+                            memorial_events.push(memorial_event);
+                        }
+                        db.collection('events').insertMany(
+                            memorial_events,
+                            function(operationErr, event){
+                                if(operationErr){
+                                    res.send({success: false, msg: "DB find failed."});
+                                    throw operationErr;
+                                }
+                                res.send({success: true, msg: "Successfully automatically generated events for memorial event. "+insertedEvent.insertedId});
+                                client.close();}
+                        );
+                    }
+                    else{
+                        res.send({success: true, msg: "Successfully created event."+insertedEvent.insertedId});
+                        client.close();
+                    }
                 });
         });
     }
@@ -165,17 +225,39 @@ router.post('/timeline', function(req, res, next) {
                     let today = new Date();
                     let todayStr = today.getFullYear()+'/'+(today.getMonth()+1)+'/'+today.getDate();
                     // detect if future events
+                    // get insert id for today event
+                    let insert_id = binarySearch(events, todayStr);
                     for(let event_id=0; event_id<events.length;event_id++){
-                        if(events[event_id].date > todayStr){
+                        //if(compareDates(events[event_id].date, todayStr) > 0){
+                        if(event_id < insert_id){
                             events[event_id].future = true;
                         }
                         else{
                             events[event_id].future = false;
                         }
                     }
-                    // get insert id for today event
-                    let insert_id = binarySearch(events, todayStr);
+                    // insert today event
                     events.splice(insert_id, 0, {category:"Today", date:todayStr});
+                    // include only one future generated event for each memorial event
+                    let generated_future_events = {};
+                    let result_events = [];
+                    for(let i=0;i<events.length;i++){
+                        let event = events[i];
+                        if(event.category=="Generated" && event.future==true){
+                            if(!(event._id in generated_future_events)){
+                                generated_future_events[event.ref_id] = [];
+                            }
+                            generated_future_events[event.ref_id].push(event);
+                        }
+                        else{
+                            result_events.push(event);
+                        }
+                    }
+                    for(let ref_id in generated_future_events){
+                        let generated_event_arr = generated_future_events[ref_id];
+                        result_events.push(generated_event_arr[generated_event_arr.length-1]);
+                    }
+                    result_events.sort(function(a,b){return compareDates(b.date, a.date)});
                     db.collection('users').findOne(
                         {_id: new ObjectID(user_id)},
                         {projection: {password: 0}},
@@ -184,14 +266,14 @@ router.post('/timeline', function(req, res, next) {
                             res.send({success: false, msg: "DB find failed."});
                             throw operationErr2;
                         }
-                        res.send({data: events, user: user, success: true, msg: "Successfully load timeline for user."});
+                        res.send({data: result_events, user: user, success: true, msg: "Successfully load timeline for user."});
                     });
                     client.close();
             });
     });
 });
 
-// for you page: show the latest public event for everyone
+// for you page: show the latest public event for everyone (no future events)
 router.post('/forYou', function(req, res, next) {
     // modified from: https://stackoverflow.com/questions/47662220/db-collection-is-not-a-function-when-using-mongoclient-v3-0
     MongoClient.connect('mongodb://localhost:27017', function (connectionErr, client) {
@@ -202,7 +284,7 @@ router.post('/forYou', function(req, res, next) {
         let db = client.db('Pawsgram');
         let data = [];
         db.collection('users').find(
-            {user_id: {$ne: req.body.current_user_id}},
+            {},
             {projection: {password: 0}}
             )
             .toArray(
@@ -211,6 +293,7 @@ router.post('/forYou', function(req, res, next) {
                         res.send({success: false, msg: "DB find failed."});
                         throw operationErr;
                     }
+                    console.log("for you users:",users)
                     for(let i=0; i<users.length; i++){
                         let user = users[i];
                         data.push({"user":user});
@@ -280,7 +363,7 @@ function binarySearch(array, today){
     while(h < array.length && l <= h){
         mid = parseInt((l+h+1)/2);
         //console.log("low:",l,"\tmid:",mid,"\thigh:",h);
-        if(array[mid].date > today){
+        if(compareDates(array[mid].date, today) > 0){
             res = mid;
             l = mid+1;
         }
@@ -295,6 +378,5 @@ function binarySearch(array, today){
 
 module.exports = router;
 
-// TODO: for you include self
-// TODO: automatically generate memorial events
+// TODO: for you not working when user not logged in
 // TODO: 服务器上传图片

@@ -109,6 +109,7 @@ $(document).ready(function (){
 
     $("#foryou").click(function (){
         $.post("/events/forYou",
+            {current_user_id: "5fd921e26502451c005840ed"},
             function(data, status){
                 console.log(data, status);
             });
